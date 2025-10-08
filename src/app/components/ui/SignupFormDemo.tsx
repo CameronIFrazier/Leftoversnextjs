@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, {useState} from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { cn } from "@/app/lib/utils";
@@ -8,12 +8,28 @@ import {
   IconBrandGoogle,
   IconBrandOnlyfans,
 } from "@tabler/icons-react";
+{/** formData hold everything that will be sent to the database 
+const [formData, setFormData] = useState({
+    firstname: "",
+    lastname: "",
+    email: "",
+    password: "",
+  });
+  */}
 
 export function SignupFormDemo() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Form submitted");
   };
+
+   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    //setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+  
+
+
   return (
     <div className="shadow-input max-w-md rounded-none bg-white p-4 md:rounded-2xl md:p-8 dark:bg-black pb-4 ">
       <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
@@ -28,20 +44,25 @@ export function SignupFormDemo() {
         <div className=" flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
           <LabelInputContainer>
             <Label htmlFor="firstname">First name</Label>
-            <Input id="firstname" placeholder="Tyler" type="text" />
+            <Input id="firstname" placeholder="Tyler" type="text"  
+              onChange={handleChange}/>
           </LabelInputContainer>
           <LabelInputContainer>
             <Label htmlFor="lastname">Last name</Label>
-            <Input id="lastname" placeholder="Durden" type="text" />
+            <Input id="lastname" placeholder="Durden" type="text"  
+              onChange={handleChange}/>
           </LabelInputContainer>
         </div>
         <LabelInputContainer className="mt-4">
           <Label htmlFor="email">Email Address</Label>
-          <Input id="email" placeholder="projectmayhem@fc.com" type="email" />
+          <Input id="email" placeholder="projectmayhem@fc.com" type="email"             
+            onChange={handleChange}
+ />
         </LabelInputContainer>
         <LabelInputContainer className="mt-4">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" placeholder="••••••••" type="password" />
+          <Input id="password" placeholder="••••••••" type="password" 
+            onChange={handleChange}/>
         </LabelInputContainer>
         
 
