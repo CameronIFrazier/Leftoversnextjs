@@ -22,4 +22,19 @@ const eslintConfig = [
   },
 ];
 
+module.exports = {
+  root: true,
+  extends: ["next", "next/core-web-vitals", "plugin:@typescript-eslint/recommended"],
+  ignorePatterns: [
+    "src/generated/**", // ignore Prisma generated files
+    "node_modules/**",
+    ".next/**",
+    "out/**",
+    "build/**",
+  ],
+  rules: {
+    // your custom ESLint rules
+  },
+};
+
 export default eslintConfig;
