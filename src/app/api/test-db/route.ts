@@ -1,5 +1,7 @@
 import mysql from "mysql2/promise";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   try {
     const connection = await mysql.createConnection({
