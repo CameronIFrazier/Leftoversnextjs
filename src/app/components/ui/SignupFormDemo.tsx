@@ -31,11 +31,11 @@ export function SignupFormDemo() {
 
 
   return (
-    <div className="shadow-input max-w-md rounded-none bg-white p-4 md:rounded-2xl md:p-8 dark:bg-black pb-4 ">
-      <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
+    <div className="shadow-input max-w-md rounded-none bg-black p-4 md:rounded-2xl md:p-8 dark:bg-black pb-4 ">
+      <h2 className="text-xl font-bold text-indigo-300 dark:text-neutral-200">
         Welcome to Leftovers
       </h2>
-      <p className="mt-2 max-w-sm text-sm text-neutral-600 dark:text-neutral-300">
+      <p className="mt-2 max-w-sm text-sm text-white dark:text-neutral-300">
         Login to Leftovers if you can because we don&apos;t have a login flow
         yet
       </p>

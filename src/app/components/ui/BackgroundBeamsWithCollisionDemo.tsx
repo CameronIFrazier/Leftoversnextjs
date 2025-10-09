@@ -12,7 +12,7 @@ export function BackgroundBeamsWithCollisionDemo() {
         <NavbarDemo></NavbarDemo>
 
        
-        <div className="flex flex-row pt-10">
+        <div className="flex flex-row pt-15">
           <SignupFormDemo></SignupFormDemo>
 
           {/**BOTTOM RIGHT CONTAINER */}
@@ -39,8 +39,8 @@ export function BackgroundBeamsWithCollisionDemo() {
         </div>
       </div>
       {/**Bottom half container */}
-      <div className="flex flex-col pt-10 w-full items-center justify-center">
-        <h1 className="text-5xl pb-10">Join millions of aspiring e-sports professionals worldwide</h1>
+      <div className="flex flex-col pt-60 w-full items-center justify-center">
+        <h1 className="text-5xl">Join millions of aspiring e-sports professionals worldwide</h1>
         <div className="w-full flex flex-row">
           {" "}
           <div className="w-[50%] h-[80vh] flex items-center justify-center">
