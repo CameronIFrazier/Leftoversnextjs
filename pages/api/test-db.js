@@ -1,21 +1,24 @@
-import { PrismaClient } from "@prisma/client";
+import mysql from "mysql2/promise";
 
-const prisma = new PrismaClient();
-
-export async function GET() {
+export default async function handler(req, res) {
   try {
-    const users = await prisma.user.findMany();
-    return new Response(JSON.stringify({ success: true, users }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+    const connection = await mysql.createConnection({
+      host: process.env.MYSQL_HOST,
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE,
+      port: Number(process.env.MYSQL_PORT),
     });
-  } catch (error: any) {
-    return new Response(JSON.stringify({ success: false, error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+
+    const [rows] = await connection.query("SELECT NOW() as now");
+    await connection.end();
+
+    res.status(200).json({ success: true, rows });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 }
+
 
 {/**import mysql from "mysql2/promise"; old
 

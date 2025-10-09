@@ -21,7 +21,7 @@ const eslintConfig = [
     ],
   },
 ];
-
+{/* module.exports = eslintConfig; 
 module.exports = {
   root: true,
   extends: ["next", "next/core-web-vitals", "plugin:@typescript-eslint/recommended"],
@@ -36,5 +36,6 @@ module.exports = {
     // your custom ESLint rules
   },
 };
+*/}
 
 export default eslintConfig;
