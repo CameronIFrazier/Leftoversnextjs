@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <>
       {/*<BackgroundBeamsWithCollisionDemo></BackgroundBeamsWithCollisionDemo> */}
-      <div className="flex flex-col bg-black h-[200vh] w-screen items-center justify-start ">
+      <div className="flex flex-col bg-black h-[250vh] w-screen items-center justify-start ">
         <NavbarDemo></NavbarDemo>
         <div className="flex-col relative items-start justify-start w-[70%] ">
            <div className="w-full my-4 mt-20">
