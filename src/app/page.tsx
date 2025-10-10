@@ -10,13 +10,16 @@ export default function Home() {
     <>
       {/*<BackgroundBeamsWithCollisionDemo></BackgroundBeamsWithCollisionDemo> */}
       <div className="flex flex-col bg-black h-[200vh] w-screen items-center justify-start ">
+        <NavbarDemo></NavbarDemo>
         <div className="flex-col relative items-start justify-start w-[70%] ">
-          <NavbarDemo></NavbarDemo>
+           <div className="w-full my-4 mt-20">
+  <hr className="border-t-2 border-white" />
+</div>
 
           <div className="flex flex-row pt-15">
             <div className="w-[100%] h-full">
               <h1 className="text-5xl font-bold pt-4 text-indigo-400 pb-5">
-                Go <br></br> Pro<br></br> Today
+                Go <br></br> Pro<br></br> With Us
               </h1>
               <ShineBorderDemo></ShineBorderDemo>
             </div>
@@ -35,7 +38,9 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <hr className="border-t-2 border-white my-4" />
+        <div className="w-[70%] my-4 mt-20">
+  <hr className="border-t-2 border-white" />
+</div>
 
         {/**Bottom half container */}
         <div className="flex flex-col pt-60 w-full items-center justify-center">
@@ -48,6 +53,7 @@ export default function Home() {
               <GlobeDemo></GlobeDemo>
             </div>
             <div className="w-[50%] h-[70vh] flex items-center justify-start ">
+              
               <SignupFormDemo></SignupFormDemo>
             </div>
           </div>

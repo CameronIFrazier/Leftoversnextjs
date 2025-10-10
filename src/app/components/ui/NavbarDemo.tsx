@@ -1,4 +1,5 @@
 "use client";
+import { ShineBorder } from "./shineborder";
 import {
   Navbar,
   NavBody,
@@ -13,6 +14,12 @@ import {
 import { useState } from "react";
 
 export function NavbarDemo() {
+  const scrollToBottom = () => {
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior: "smooth", // smooth scrolling
+  });
+};
   const navItems = [
     {
       name: "Features",
@@ -32,7 +39,7 @@ export function NavbarDemo() {
 
   return (
     <div className="relative w-full ">
-      
+      <ShineBorder></ShineBorder>
       <Navbar>
         {/* Desktop Navigation */}
         <NavBody>
@@ -40,7 +47,7 @@ export function NavbarDemo() {
           <NavItems items={navItems} />
           <div className="flex items-center gap-4 pb">
             <NavbarButton variant="secondary">Login</NavbarButton>
-            <NavbarButton variant="primary">Book a call</NavbarButton>
+            <NavbarButton variant="primary" onClick={scrollToBottom}>Sign Up</NavbarButton>
           </div>
         </NavBody>
 

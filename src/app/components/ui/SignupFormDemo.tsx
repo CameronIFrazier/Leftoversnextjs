@@ -9,6 +9,7 @@ import {
   IconBrandOnlyfans,
 } from "@tabler/icons-react";
 import { pass } from "three/tsl";
+import { ShineBorder } from "./shineborder";
 
 
 
@@ -47,7 +48,8 @@ export function SignupFormDemo() {
 
 
   return (
-    <div className="shadow-input max-w-md rounded-none bg-black p-4 md:rounded-2xl md:p-8 dark:bg-black pb-4 ">
+    <> 
+    <div className="shadow-input max-w-md rounded-none border bg-black p-4 md:rounded-2xl md:p-8 dark:bg-black pb-4 ">
       <h2 className="text-xl font-bold text-indigo-300 dark:text-neutral-200">
         Welcome to Leftovers
       </h2>
@@ -60,6 +62,7 @@ export function SignupFormDemo() {
         <div className=" flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
           <LabelInputContainer>
             <Label htmlFor="firstname">First name</Label>
+           
             <Input id="firstname" placeholder="Tyler" type="text"  
               onChange={handleChange}/>
           </LabelInputContainer>
@@ -95,6 +98,7 @@ export function SignupFormDemo() {
         
       </form>
     </div>
+    </>
   );
 }
 
