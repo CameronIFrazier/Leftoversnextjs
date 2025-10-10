@@ -12,8 +12,8 @@ export async function POST(req: Request) {
       port: Number(process.env.MYSQL_PORT),
     });
 
-    // Type rows as array of RowDataPacket
-    const [rows]: [RowDataPacket[], any] = await connection.query(
+    // Only type rows; ignore fields with _
+    const [rows] = await connection.query<RowDataPacket[]>(
       "SELECT * FROM users WHERE email = ? AND password = ?",
       [email, password]
     );
