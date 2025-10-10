@@ -9,50 +9,52 @@ export default function Home() {
   return (
     <>
       {/*<BackgroundBeamsWithCollisionDemo></BackgroundBeamsWithCollisionDemo> */}
-      <div className="flex flex-col bg-black h-[200vh] w-screen items-center justify-start ">
+      <div className="flex flex-col bg-black min-h-screen w-screen items-center justify-start ">
         <NavbarDemo></NavbarDemo>
         <div className="flex-col relative items-start justify-start w-[70%] ">
            <div className="w-full my-4 mt-20">
   <hr className="border-t-2 border-white" />
 </div>
 
-          <div className="flex flex-row pt-15">
-            <div className="w-[100%] h-full">
-              <h1 className="text-5xl font-bold pt-4 text-indigo-400 pb-5">
-                Go <br></br> Pro<br></br> With Us
-              </h1>
-              <ShineBorderDemo></ShineBorderDemo>
-            </div>
+          <div className="flex flex-row pt-15 gap-4">
+  {/* Left column: takes as much space as its content needs */}
+  <div className="flex-none bg-yellow p-4">
+    <h1 className="text-5xl font-bold pt-4 text-indigo-400 pb-5">
+      Go <br /> Pro<br /> With Us
+    </h1>
+    <ShineBorderDemo />
+  </div>
 
-            <div className="w-full h-full flex flex-col items-start justify-start pl-4  ">
-              <div className="relative w-[46vw] h-[26vw] overflow-hidden rounded-lg gap-4 ">
-                <iframe
-                  className=" absolute top-1/2 left-1/2 w-[177.77vh] h-[100vh] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                  src="https://www.youtube.com/embed/vlRt36fKgaw?autoplay=1&mute=1&loop=1&playlist=vlRt36fKgaw"
-                  title="YouTube video"
-                  frameBorder="0"
-                  allow="autoplay; fullscreen"
-                ></iframe>
-              </div>
-              <div className="w-full"></div>
-            </div>
-          </div>
+  {/* Right column: takes remaining space */}
+  <div className="flex-1 flex flex-col items-start justify-start pl-4 bg">
+    <div className="relative w-full aspect-video max-w-4xl overflow-hidden rounded-lg">
+      <iframe
+        className="absolute top-0 left-0 w-full h-full pointer-events-none"
+        src="https://www.youtube.com/embed/vlRt36fKgaw?autoplay=1&mute=1&loop=1&playlist=vlRt36fKgaw"
+        title="YouTube video"
+        frameBorder="0"
+        allow="autoplay; fullscreen"
+      ></iframe>
+    </div>
+  </div>
+</div>
+
         </div>
         <div className="w-[70%] my-4 mt-20">
   <hr className="border-t-2 border-white" />
 </div>
 
         {/**Bottom half container */}
-        <div className="flex flex-col  w-full items-center justify-center">
+        <div className="flex flex-col min-h-screen w-[70%] items-center justify-center">
           <h1 className="text-5xl text-indigo-400 font-bold">
             Join millions of aspiring e-sports professionals worldwide
           </h1>
-          <div className="w-full flex flex-row">
+          <div className="w-[90%] flex flex-row">
             {" "}
-            <div className="w-[50%] h-[80vh] flex items-center justify-center">
+            <div className=" lex flex-1 min-h items-center justify-center bg-">
               <GlobeDemo></GlobeDemo>
             </div>
-            <div className="w-[50%] h-[70vh] flex items-center justify-start ">
+            <div className="h-[70vh] flex flex-none items-center justify-start ">
               
               <SignupFormDemo></SignupFormDemo>
             </div>

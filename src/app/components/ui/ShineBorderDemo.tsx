@@ -59,7 +59,7 @@ const [formData, setFormData] = useState({
 };
 
   return (
-    <Card className="relative w-full h-[50%] max-w-[350px] overflow-hidden bg-black ">
+    <Card className="relative w-full max-w-[350px] min-h-[300px] overflow-visible bg-black">
       <ShineBorder shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} />
       <CardHeader>
         <CardTitle className="text-white">Login</CardTitle>
