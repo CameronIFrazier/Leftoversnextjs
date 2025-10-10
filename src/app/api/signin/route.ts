@@ -1,4 +1,4 @@
-import mysql from "mysql2/promise";
+import mysql, { RowDataPacket } from "mysql2/promise";
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +12,8 @@ export async function POST(req: Request) {
       port: Number(process.env.MYSQL_PORT),
     });
 
-    const [rows]: any = await connection.query(
+    // Type rows as array of RowDataPacket
+    const [rows]: [RowDataPacket[], any] = await connection.query(
       "SELECT * FROM users WHERE email = ? AND password = ?",
       [email, password]
     );
