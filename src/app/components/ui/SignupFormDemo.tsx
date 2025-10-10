@@ -54,8 +54,7 @@ export function SignupFormDemo() {
         Welcome to Leftovers
       </h2>
       <p className="mt-2 max-w-sm text-sm text-white dark:text-neutral-300">
-        Login to Leftovers if you can because we don&apos;t have a login flow
-        yet
+        Login to Leftovers Here 
       </p>
 
       <form className="my-4" onSubmit={handleSubmit}>
