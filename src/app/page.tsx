@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <>
       {/*<BackgroundBeamsWithCollisionDemo></BackgroundBeamsWithCollisionDemo> */}
-      <div className="flex flex-col bg-black h-[280vh] w-screen items-center justify-start ">
+      <div className="flex flex-col bg-black h-[200vh] w-screen items-center justify-start ">
         <NavbarDemo></NavbarDemo>
         <div className="flex-col relative items-start justify-start w-[70%] ">
            <div className="w-full my-4 mt-20">
@@ -25,7 +25,7 @@ export default function Home() {
             </div>
 
             <div className="w-full h-full flex flex-col items-start justify-start pl-4  ">
-              <div className="relative w-[51vw] h-[26vw] overflow-hidden rounded-lg gap-4 ">
+              <div className="relative w-[46vw] h-[26vw] overflow-hidden rounded-lg gap-4 ">
                 <iframe
                   className=" absolute top-1/2 left-1/2 w-[177.77vh] h-[100vh] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                   src="https://www.youtube.com/embed/vlRt36fKgaw?autoplay=1&mute=1&loop=1&playlist=vlRt36fKgaw"
@@ -43,7 +43,7 @@ export default function Home() {
 </div>
 
         {/**Bottom half container */}
-        <div className="flex flex-col pt-60 w-full items-center justify-center">
+        <div className="flex flex-col  w-full items-center justify-center">
           <h1 className="text-5xl text-indigo-400 font-bold">
             Join millions of aspiring e-sports professionals worldwide
           </h1>
