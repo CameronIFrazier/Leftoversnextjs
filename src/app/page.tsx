@@ -3,6 +3,8 @@ import { RetroGridDemo } from "./components/ui/RetroGridDemo";
 import { SignupFormDemo } from "./components/ui/SignupFormDemo";
 import { NavbarDemo } from "./components/ui/NavbarDemo";
 import { GlobeDemo } from "./components/ui/GlobeDemo";  
+import { ShineBorderDemo } from "./components/ui/ShineBorderDemo";
+import { ShineBorder } from "./components/ui/shineborder"
 export default function Home() {
   return (
     <>
@@ -10,11 +12,12 @@ export default function Home() {
     {/*<BackgroundBeamsWithCollisionDemo></BackgroundBeamsWithCollisionDemo> */}
     <div className="flex flex-col bg-black h-[200vh] w-screen items-center justify-start ">
           <div className="flex-col relative items-start justify-start w-[70%] ">
+            
             <NavbarDemo></NavbarDemo>
     
            
             <div className="flex flex-row pt-15">
-              <SignupFormDemo></SignupFormDemo>
+             <ShineBorderDemo></ShineBorderDemo>
     
               {/**BOTTOM RIGHT CONTAINER */}
               <div className="w-full h-full flex flex-col items-start justify-start pl-4  ">

@@ -8,24 +8,40 @@ import {
   IconBrandGoogle,
   IconBrandOnlyfans,
 } from "@tabler/icons-react";
-{/** formData hold everything that will be sent to the database 
-const [formData, setFormData] = useState({
+import { pass } from "three/tsl";
+
+
+
+
+export function SignupFormDemo() {
+
+   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
     email: "",
     password: "",
-  });
-  */}
+  }); 
 
-export function SignupFormDemo() {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Form submitted");
-  };
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  try {
+    const res = await fetch("/api/test-db", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await res.json();
+    console.log(data);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    //setFormData((prev) => ({ ...prev, [id]: value }));
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    console.log(formData);
   };
   
 

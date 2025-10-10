@@ -1,9 +1,25 @@
 import mysql from "mysql2/promise";
 
-
-
-export async function GET() {
+export async function POST(req: Request) {
   try {
+    console.log("POST request received");
+
+    const body = await req.json();
+    console.log("Request body:", body);
+
+    const { firstname, lastname, email, password } = body;
+
+    // Quick validation
+    if (!firstname || !lastname || !email || !password) {
+      console.log("Missing fields");
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing fields" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Connecting to MySQL...");
+
     const connection = await mysql.createConnection({
       host: process.env.MYSQL_HOST,
       user: process.env.MYSQL_USER,
@@ -12,31 +28,30 @@ export async function GET() {
       port: Number(process.env.MYSQL_PORT),
     });
 
-    const [rows] = await connection.query("SELECT NOW() as now");
-    await connection.end();
+    console.log("Connected to MySQL");
 
-    return new Response(JSON.stringify({ success: true, rows }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    const [result] = await connection.query(
+      "INSERT INTO users (firstname, lastname, email, password) VALUES (?, ?, ?, ?)",
+      [firstname, lastname, email, password]
+    );
+
+    console.log("Insert result:", result);
+
+    await connection.end();
+    console.log("Connection closed");
+
+    return new Response(
+      JSON.stringify({ success: true, message: "User added!" }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
   } catch (error) {
-    // TypeScript now sees `error` as unknown
+    console.error("POST error:", error);
     return new Response(
       JSON.stringify({
         success: false,
         error: error instanceof Error ? error.message : String(error),
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-}
-
-export async function POST() {
-  return new Response(JSON.stringify({ success: true, message: "POST works!" }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
 }
