@@ -46,7 +46,7 @@ export async function GET(req: Request) {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error fetching username:", err);
     return new Response(
       JSON.stringify({ error: err instanceof Error ? err.message : String(err) }),
