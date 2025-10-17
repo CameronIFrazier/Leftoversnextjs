@@ -31,8 +31,10 @@ export async function POST(req: Request) {
     const token = jwt.sign(
       { email }, // payload
       process.env.JWT_SECRET!, // secret key
+      
       { expiresIn: "7d" } // optional expiration time
     );
+    console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
     // ✅ Return token to frontend
     return new Response(
