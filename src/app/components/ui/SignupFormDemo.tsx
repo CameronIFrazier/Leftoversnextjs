@@ -38,6 +38,7 @@ export function SignupFormDemo() {
 
     const data = await res.json();
     console.log(data);
+    alert("User registered successfully!");
   } catch (err) {
     console.error(err);
   }
@@ -66,24 +67,24 @@ export function SignupFormDemo() {
           <LabelInputContainer>
             <Label htmlFor="firstname">First name</Label>
            
-            <Input id="firstname" placeholder="Tyler" type="text"  
+            <Input id="firstname" placeholder="First Name" type="text"  
               onChange={handleChange}/>
           </LabelInputContainer>
           <LabelInputContainer>
             <Label htmlFor="lastname">Last name</Label>
-            <Input id="lastname" placeholder="Durden" type="text"  
+            <Input id="lastname" placeholder="Last Name" type="text"  
               onChange={handleChange}/>
           </LabelInputContainer>
         </div>
         <LabelInputContainer className="mt-4">
           <Label htmlFor="email">Email Address</Label>
-          <Input id="email" placeholder="projectmayhem@fc.com" type="email"             
+          <Input id="email" placeholder="email" type="email"             
             onChange={handleChange}
  />
         </LabelInputContainer>
         <LabelInputContainer className="mt-4">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" placeholder="••••••••" type="password" 
+          <Input id="password" placeholder="password" type="password" 
             onChange={handleChange}/>
         </LabelInputContainer>
 
@@ -98,6 +99,7 @@ export function SignupFormDemo() {
         <button
           className="mt-4 group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
           type="submit"
+          
         >
           Sign up &rarr;
           <BottomGradient />

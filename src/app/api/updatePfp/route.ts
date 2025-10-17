@@ -1,40 +1,47 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-
-import mysql from "mysql2/promise";
+import mysql, { RowDataPacket } from "mysql2/promise";
 import { verify } from "jsonwebtoken";
+import { NextRequest, NextResponse } from "next/server";
 
-export const POST = async (req: Request) => {
-  const token = req.headers.get("authorization")?.split(" ")[1];
-  if (!token) return new Response(JSON.stringify({ success: false, error: "No token" }), { status: 401 });
+type UserRow = RowDataPacket & {
+  profile_pic: string | null;
+};
+
+export const POST = async (req: NextRequest) => {
+  // Extract token
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader) {
+    return NextResponse.json({ success: false, error: "No token" }, { status: 401 });
+  }
+  const token = authHeader.split(" ")[1];
 
   let email: string;
   try {
-    const payload: any = verify(token, process.env.JWT_SECRET!);
+    const payload = verify(token, process.env.JWT_SECRET!) as { email: string };
     email = payload.email;
   } catch {
-    return new Response(JSON.stringify({ success: false, error: "Invalid token" }), { status: 401 });
+    return NextResponse.json({ success: false, error: "Invalid token" }, { status: 401 });
   }
 
   try {
     const formData = await req.formData();
     const file = formData.get("pfp") as File | null;
-    if (!file) return new Response(JSON.stringify({ success: false, error: "No file uploaded" }), { status: 400 });
+    if (!file) {
+      return NextResponse.json({ success: false, error: "No file uploaded" }, { status: 400 });
+    }
 
     const arrayBuffer = await file.arrayBuffer();
 
-    
+    // Setup S3 client
+    const s3 = new S3Client({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      },
+    });
 
-
-// Inside your POST handler
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
-
-    // Connect to DB to check old PFP
+    // Connect to MySQL
     const connection = await mysql.createConnection({
       host: process.env.MYSQL_HOST,
       user: process.env.MYSQL_USER,
@@ -43,10 +50,14 @@ const s3 = new S3Client({
       port: Number(process.env.MYSQL_PORT),
     });
 
-    const [rows]: any = await connection.execute("SELECT profile_pic FROM users WHERE email = ?", [email]);
-    const oldUrl = rows[0]?.profilePic;
+    // Get old profile picture URL
+    const [rows] = await connection.execute<UserRow[]>(
+      "SELECT profile_pic FROM users WHERE email = ?",
+      [email]
+    );
+    const oldUrl = rows[0]?.profile_pic;
 
-    // Delete old uploaded PFP if exists
+    // Delete old uploaded PFP if exists and not a default
     if (oldUrl && !oldUrl.includes("defaults/")) {
       const oldKey = oldUrl.split(".com/")[1];
       await s3.send(new DeleteObjectCommand({ Bucket: "leftoversnextjsbucket", Key: oldKey }));
@@ -60,20 +71,19 @@ const s3 = new S3Client({
         Key: s3Key,
         Body: Buffer.from(arrayBuffer),
         ContentType: file.type || undefined,
-        // ACL: "public-read", NOT USING ACL ANYMORE
       })
     );
 
     const newUrl = `https://leftoversnextjsbucket.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
 
-
-    // Update DB
+    // Update MySQL
     await connection.execute("UPDATE users SET profile_pic = ? WHERE email = ?", [newUrl, email]);
     await connection.end();
 
-    return new Response(JSON.stringify({ success: true, url: newUrl }), { status: 200 });
-  } catch (err: any) {
-    console.error(err);
-    return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500 });
+    return NextResponse.json({ success: true, url: newUrl }, { status: 200 });
+  } catch (error: unknown) {
+    console.error(error);
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 };

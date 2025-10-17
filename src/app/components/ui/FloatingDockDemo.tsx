@@ -18,7 +18,13 @@ export function FloatingDockDemo() {
       ),
       href: "https://leftoversnextjs-pyhl.vercel.app/",
     },
-
+{
+      title: "Creat new Post",
+      icon: (
+        <IconNewSection className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+      ),
+      href: "#",
+    },
     
 
     

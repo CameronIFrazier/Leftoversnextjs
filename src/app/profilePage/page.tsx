@@ -107,9 +107,9 @@ export default function ProfilePage() {
         <section className="w-[60%] h-auto pr-5  ">
           {" "}
           {/** Left side */}
-          <section className="w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white border border-white rounded-lg bg-indigo-500">
+          <section className="w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white border border-white rounded-lg bg-black-300">
             {userName ? (
-  <h2 className="text-xl font-bold mb-2">@{userName}</h2>
+  <h2 className="text-xl font-bold text-indigo-500 mb-2">@{userName}</h2>
 ) : (
   <p>Loading username...</p>
 )}
@@ -168,7 +168,7 @@ export default function ProfilePage() {
               Save Bio
             </button>
           </section>
-          <section className="h-[600px] border border-white bg-indigo-900 rounded-lg mt-5 flex flex-col items-center justify-center">
+          <section className="h-[600px] border border-white  rounded-lg mt-5 flex flex-col items-center justify-center bg-black">
             <h1 className=""> Past Posts</h1>
 
             <div className="mt-4 flex flex-col bg-indigo-500"></div>
@@ -178,7 +178,7 @@ export default function ProfilePage() {
           {" "}
           {/** Right side */}
           
-          <section className="h-[1020px] border border-white rounded-lg flex flex-col items-center bg-indigo-500 justify-start">
+          <section className="h-[1020px] border border-white rounded-lg flex flex-col items-center justify-start bg-black">
             <h1 className="mb-5">People You May Know</h1>{" "}
             <div className="w-[90%] h-[90%] bg-indigo-900 border border-white rounded-lg"></div>
           </section>
