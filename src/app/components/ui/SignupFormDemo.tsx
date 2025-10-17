@@ -1,5 +1,5 @@
 "use client";
-import React, {useState} from "react";
+import React, {use, useState} from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { cn } from "@/app/lib/utils";
@@ -21,10 +21,14 @@ export function SignupFormDemo() {
     lastname: "",
     email: "",
     password: "",
+    userName: "",
   }); 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
+  
+
+  
   try {
     const res = await fetch("/api/test-db", {
       method: "POST",
@@ -82,6 +86,13 @@ export function SignupFormDemo() {
           <Input id="password" placeholder="••••••••" type="password" 
             onChange={handleChange}/>
         </LabelInputContainer>
+
+        <LabelInputContainer className="mt-4">
+          <Label htmlFor="userName">UserName</Label>
+          <Input id="userName" placeholder="userName" type="userName" 
+            onChange={handleChange}/>
+        </LabelInputContainer>
+        
         
 
         <button

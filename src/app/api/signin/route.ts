@@ -1,4 +1,5 @@
 import mysql, { RowDataPacket } from "mysql2/promise";
+import jwt from "jsonwebtoken";
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +13,6 @@ export async function POST(req: Request) {
       port: Number(process.env.MYSQL_PORT),
     });
 
-    // Only type rows; ignore fields with _
     const [rows] = await connection.query<RowDataPacket[]>(
       "SELECT * FROM users WHERE email = ? AND password = ?",
       [email, password]
@@ -27,9 +27,20 @@ export async function POST(req: Request) {
       );
     }
 
-    // Successfully signed in
+    // ✅ User found — create a JWT containing their email
+    const token = jwt.sign(
+      { email }, // payload
+      process.env.JWT_SECRET!, // secret key
+      { expiresIn: "7d" } // optional expiration time
+    );
+
+    // ✅ Return token to frontend
     return new Response(
-      JSON.stringify({ success: true, message: "Signed in!", userId: rows[0].id }),
+      JSON.stringify({
+        success: true,
+        message: "Signed in!",
+        token, // frontend can store this
+      }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {

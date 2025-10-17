@@ -7,10 +7,10 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log("Request body:", body);
 
-    const { firstname, lastname, email, password } = body;
+    const { firstname, lastname, email, password, userName } = body;
 
     // Quick validation
-    if (!firstname || !lastname || !email || !password) {
+    if (!firstname || !lastname || !email || !password || !userName) {
       console.log("Missing fields");
       return new Response(
         JSON.stringify({ success: false, error: "Missing fields" }),
@@ -30,9 +30,10 @@ export async function POST(req: Request) {
 
     console.log("Connected to MySQL");
 
+    // Insert the new user with userName included
     const [result] = await connection.query(
-      "INSERT INTO users (firstname, lastname, email, password) VALUES (?, ?, ?, ?)",
-      [firstname, lastname, email, password]
+      "INSERT INTO users (firstname, lastname, email, password, userName) VALUES (?, ?, ?, ?, ?)",
+      [firstname, lastname, email, password, userName]
     );
 
     console.log("Insert result:", result);
