@@ -2,6 +2,7 @@ import mysql, { RowDataPacket } from "mysql2/promise";
 import jwt from "jsonwebtoken";
 
 export async function POST(req: Request) {
+   console.log("JWT_SECRET:", process.env.JWT_SECRET);
   try {
     const { email, password } = await req.json();
 
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
       
       { expiresIn: "7d" } // optional expiration time
     );
-    console.log("JWT_SECRET:", process.env.JWT_SECRET);
+    
 
     // ✅ Return token to frontend
     return new Response(
