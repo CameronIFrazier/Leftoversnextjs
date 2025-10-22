@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ User found — create a JWT containing their email
+    //  User found — create a JWT containing their email
     const token = jwt.sign(
       { email }, // payload
       process.env.JWT_SECRET!, // secret key
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     );
     
 
-    // ✅ Return token to frontend
+    //  Return token to frontend
     return new Response(
       JSON.stringify({
         success: true,

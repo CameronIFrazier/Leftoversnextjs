@@ -1,5 +1,8 @@
 import React from "react";
 import { FloatingDock } from "./floating-dock";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
 import {
   IconBrandGithub,
   IconBrandX,
@@ -24,6 +27,14 @@ export function FloatingDockDemo() {
         <IconNewSection className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "#",
+    },
+    {
+      title: "",
+      icon: (
+        <IconTerminal2 className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+      ),
+      href: "/SponsorPage",
+      
     },
     
 
