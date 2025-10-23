@@ -1,13 +1,19 @@
 "use client";
 import React, { useState, useEffect, use } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
-
+interface Post {
+  id: number;
+  title: string;
+  description: string;
+   media_url?: string | null;
+  created_at?: string;
+}
 export default function ProfilePage() {
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [highlight, setHighlight] = useState<string | null>(null);
   const [userName, setuserName] = useState<string | null>(null);
-  const [posts, setPosts] = useState<any[]>([]); // 🔹 NEW — store all posts
+  const [posts, setPosts] = useState<Post[]>([]); // 🔹 NEW — store all posts
   const [title, setTitle] = useState(""); // 🔹 NEW — new post title
   const [description, setDescription] = useState(""); // 🔹 NEW — new post desc
   const [media, setMedia] = useState<File | null>(null); // 🔹 NEW — new post file
@@ -93,12 +99,10 @@ const [userId, setUserId] = useState<number | null>(null);
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    let media_url = null;
+    const media_url = media ? URL.createObjectURL(media) : null;
 
     // 🔹 Optional: temporary media handling (can later integrate real upload)
-    if (media) {
-      media_url = URL.createObjectURL(media); // local blob for now
-    }
+    
 
     try {
       const res = await fetch("/api/posts", {
