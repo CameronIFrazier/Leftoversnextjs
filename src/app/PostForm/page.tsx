@@ -1,14 +1,21 @@
 "use client"; 
 import { useState } from "react";
 //CURRENTLY UNUSED
-export default function PostForm({ onPostCreated }: { onPostCreated: (post: any) => void }) {
+interface Post {
+  id: number;
+  title: string;
+  description: string;
+  media_url?: string;
+  created_at?: string;
+}
+export default function PostForm({ onPostCreated }: { onPostCreated: (post: Post) => void }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [media, setMedia] = useState<File | null>(null);
 
   const handleSubmit = async () => {
     // 1. Upload media first
-    let media_url = null;
+    const media_url = media ? URL.createObjectURL(media) : null;
     if (media) {
       //media_url = await uploadToStorage(media); // implement your upload NOTHING FOR NOW
     }

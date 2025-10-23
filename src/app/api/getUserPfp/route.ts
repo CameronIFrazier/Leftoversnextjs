@@ -37,7 +37,7 @@ export async function GET(req: Request) {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (err) {
+  } catch (_err) {
     return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
       status: 401,
     });
