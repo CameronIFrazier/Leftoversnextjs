@@ -1,5 +1,6 @@
+"use client"; 
 import { useState } from "react";
-
+//CURRENTLY UNUSED
 export default function PostForm({ onPostCreated }: { onPostCreated: (post: any) => void }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
