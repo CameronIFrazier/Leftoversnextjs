@@ -1,82 +1,72 @@
-// app/successPage/page.tsx
 "use client";
-import React from "react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { GlowingEffectDemo } from "../components/ui/GlowingEffectDemo";
+import React, { useState, useEffect, use } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 
 export default function ProfilePage() {
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [highlight, setHighlight] = useState<string | null>(null);
-  const [newHighlight, setNewHighlight] = useState("");
   const [userName, setuserName] = useState<string | null>(null);
+  const [posts, setPosts] = useState<any[]>([]); // 🔹 NEW — store all posts
+  const [title, setTitle] = useState(""); // 🔹 NEW — new post title
+  const [description, setDescription] = useState(""); // 🔹 NEW — new post desc
+  const [media, setMedia] = useState<File | null>(null); // 🔹 NEW — new post file
+const [userId, setUserId] = useState<number | null>(null);
+
   useEffect(() => {
     async function fetchUserData() {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-    try {
-      // Fetch username
-      const resUser = await fetch("/api/getUserName", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const dataUser = await resUser.json();
-      if (dataUser.userName) setuserName(dataUser.userName);
+      try {
+        // Fetch username
+        const resUser = await fetch("/api/getUserName", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const dataUser = await resUser.json();
+        if (dataUser.userName) setuserName(dataUser.userName);
 
-      // Existing fetches
-      const resPfp = await fetch("/api/getUserPfp", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const dataPfp = await resPfp.json();
-      if (dataPfp.profilePic) setProfilePic(dataPfp.profilePic);
+        // Fetch profile picture
+        const resPfp = await fetch("/api/getUserPfp", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const dataPfp = await resPfp.json();
+        if (dataPfp.profilePic) setProfilePic(dataPfp.profilePic);
 
-      const resBio = await fetch("/api/getUserBio", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const dataBio = await resBio.json();
-      if (dataBio.bio) setBio(dataBio.bio);
+        // Fetch bio
+        const resBio = await fetch("/api/getUserBio", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const dataBio = await resBio.json();
+        if (dataBio.bio) setBio(dataBio.bio);
 
-      const resHighlight = await fetch("/api/getUserHighlight", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const dataHighlight = await resHighlight.json();
-      if (dataHighlight.highlight) setHighlight(dataHighlight.highlight);
-    } catch (err) {
-      console.error("Failed to fetch user data:", err);
+        // Fetch highlight
+        const resHighlight = await fetch("/api/getUserHighlight", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const dataHighlight = await resHighlight.json();
+        if (dataHighlight.highlight) setHighlight(dataHighlight.highlight);
+
+        // 🔹 Fetch user posts
+        if (dataUser.userName) {
+          const resPosts = await fetch(
+            `/api/getUserPosts?username=${dataUser.userName}`
+          );
+          const dataPosts = await resPosts.json();
+          setPosts(dataPosts);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user data:", err);
+      }
     }
-  }
 
-  fetchUserData();
-}, []);
-
-  const saveHighlight = async (newUrl: string) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const res = await fetch("/api/updateHighlight", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ highlight: newUrl }),
-      });
-      const data = await res.json();
-      if (data.success) alert("Highlight updated!");
-    } catch (err) {
-      console.error("Failed to update highlight:", err);
-    }
-  };
+    fetchUserData();
+  }, []);
 
   // Save bio to backend
   const saveBio = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
-
     try {
       const res = await fetch("/api/updateBio", {
         method: "POST",
@@ -98,21 +88,62 @@ export default function ProfilePage() {
     }
   };
 
+  // 🔹 Create new post
+  const handleCreatePost = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    let media_url = null;
+
+    // 🔹 Optional: temporary media handling (can later integrate real upload)
+    if (media) {
+      media_url = URL.createObjectURL(media); // local blob for now
+    }
+
+    try {
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, description, media_url, username: userName, }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // Update post list immediately
+        setPosts([
+          { id: data.postId, title, description, media_url },
+          ...posts,
+        ]);
+        // Reset form
+        setTitle("");
+        setDescription("");
+        setMedia(null);
+      } else {
+        console.error("Failed to create post:", data.error);
+      }
+    } catch (err) {
+      console.error("Error creating post:", err);
+    }
+  };
+
   return (
-    <section className="w-full flex flex-col items-center bg-black text-white   ">
-      
+    <section className="w-full flex flex-col items-center bg-black text-white">
       <section className="w-[70%] flex flex-row items-start justify-center pb-5 pt-5">
-        {" "}
-        {/** Main container */}
-        <section className="w-[60%] h-auto pr-5  ">
-          {" "}
-          {/** Left side */}
+        {/* Left side */}
+        <section className="w-[60%] h-auto pr-5">
+          {/* Profile box */}
           <section className="w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white border border-white rounded-lg bg-black-300">
             {userName ? (
-  <h2 className="text-xl font-bold text-indigo-500 mb-2">@{userName}</h2>
-) : (
-  <p>Loading username...</p>
-)}
+              <h2 className="text-xl font-bold text-indigo-500 mb-2">
+                @{userName}
+              </h2>
+            ) : (
+              <p>Loading username...</p>
+            )}
             {profilePic ? (
               <img
                 src={profilePic}
@@ -125,7 +156,6 @@ export default function ProfilePage() {
             <input
               type="file"
               accept="image/*"
-              
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
@@ -145,7 +175,7 @@ export default function ProfilePage() {
                   .then((data) => {
                     if (data.success) {
                       alert("Profile picture updated!");
-                      setProfilePic(data.url); // update immediately on screen
+                      setProfilePic(data.url);
                     } else {
                       console.error("Failed to update pfp:", data.error);
                     }
@@ -168,26 +198,74 @@ export default function ProfilePage() {
               Save Bio
             </button>
           </section>
-          <section className="h-[600px] border border-white  rounded-lg mt-5 flex flex-col items-center justify-center bg-black">
-            <h1 className=""> Past Posts</h1>
 
-            <div className="mt-4 flex flex-col bg-indigo-500"></div>
+          {/* 🔹 Post Creation Section */}
+          <section className="h-auto border border-white rounded-lg mt-5 flex flex-col p-4 bg-black">
+            <h1 className="text-lg font-semibold mb-3">Create a New Post</h1>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Post Title"
+              className="w-full p-2 mb-2 border border-white rounded bg-indigo-900"
+            />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Post Description"
+              className="w-full p-2 mb-2 border border-white rounded bg-indigo-900"
+              rows={4}
+            />
+            <input
+              type="file"
+              onChange={(e) => e.target.files && setMedia(e.target.files[0])}
+              className="mb-3"
+            />
+            <button
+              onClick={handleCreatePost}
+              className="px-4 py-2 bg-indigo-500 rounded hover:bg-indigo-600"
+            >
+              Create Post
+            </button>
+          </section>
+
+          {/* 🔹 Past Posts Section */}
+          <section className="h-auto border border-white rounded-lg mt-5 flex flex-col items-center justify-start bg-black p-4">
+            <h1 className="text-lg font-semibold mb-4">Past Posts</h1>
+            <div className="w-full flex flex-col gap-4">
+              {posts.length === 0 ? (
+                <p>No posts yet.</p>
+              ) : (
+                posts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="border border-indigo-500 rounded-lg p-3 bg-indigo-900"
+                  >
+                    <h2 className="font-bold">{post.title}</h2>
+                    <p>{post.description}</p>
+                    {post.media_url && (
+                      <img
+                        src={post.media_url}
+                        alt="Post media"
+                        className="mt-2 rounded-lg"
+                      />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </section>
         </section>
+
+        {/* Right side */}
         <section className="w-[15%] h-auto bg-black flex flex-col">
-          {" "}
-          {/** Right side */}
-          
           <section className="h-[1020px] border border-white rounded-lg flex flex-col items-center justify-start bg-black">
-            <h1 className="mb-5">People You May Know</h1>{" "}
+            <h1 className="mb-5">People You May Know</h1>
             <div className="w-[90%] h-[90%] bg-indigo-900 border border-white rounded-lg"></div>
           </section>
         </section>
       </section>
 
-      <div className="">
-        <FloatingDockDemo></FloatingDockDemo>
-      </div>
+      <FloatingDockDemo />
     </section>
   );
 }
