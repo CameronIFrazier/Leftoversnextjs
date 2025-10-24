@@ -15,7 +15,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LeftOvers",
   description: "Proffessional E-sport social platform",
-  },
 };
 
 export default function RootLayout({

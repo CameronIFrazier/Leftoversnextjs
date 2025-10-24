@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
+import GradientBorder from "../components/ui/GradientBorder";
 
 type Sponsor = {
   name: string;
@@ -44,39 +45,41 @@ function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
       .toUpperCase();
 
   return (
-    <div className="border border-white rounded-lg p-4 bg-black hover:bg-indigo-950 transition">
-      {/* Avatar and Name */}
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full border border-white flex items-center justify-center text-sm font-bold">
-          {initials}
+    <GradientBorder>
+      <div className="rounded-lg p-4 bg-black hover:bg-indigo-950 transition">
+        {/* Avatar and Name */}
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full border border-white flex items-center justify-center text-sm font-bold">
+            {initials}
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-indigo-400">
+              {sponsor.name}
+            </h2>
+            {sponsor.location && (
+              <p className="text-sm text-gray-300">{sponsor.location}</p>
+            )}
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-semibold text-indigo-400">
-            {sponsor.name}
-          </h2>
-          {sponsor.location && (
-            <p className="text-sm text-gray-300">{sponsor.location}</p>
-          )}
-        </div>
+
+        {/* Description */}
+        <p className="mt-3 text-sm leading-relaxed text-gray-100">
+          {sponsor.description}
+        </p>
+
+        {/* Website Link Only */}
+        {sponsor.website && (
+          <a
+            href={sponsor.website}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block mt-4 px-3 py-1 rounded-md border border-white text-xs hover:bg-white hover:text-black transition"
+          >
+            Visit Website
+          </a>
+        )}
       </div>
-
-      {/* Description */}
-      <p className="mt-3 text-sm leading-relaxed text-gray-100">
-        {sponsor.description}
-      </p>
-
-      {/* Website Link Only */}
-      {sponsor.website && (
-        <a
-          href={sponsor.website}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-block mt-4 px-3 py-1 rounded-md border border-white text-xs hover:bg-white hover:text-black transition"
-        >
-          Visit Website
-        </a>
-      )}
-    </div>
+    </GradientBorder>
   );
 }
 
@@ -101,7 +104,7 @@ export default function SponsorPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 "> Sponsors</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 ">Sponsors</h1>
             <p className="text-sm text-gray-300">
               Discover partners and organizations supporting our community.
             </p>
