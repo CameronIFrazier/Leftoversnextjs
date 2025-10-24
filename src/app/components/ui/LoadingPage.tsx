@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import LoadingDots from "./LoadingDots";
 
 interface LoadingPageProps {
   message?: string;
@@ -21,14 +22,9 @@ export function LoadingPage({ message = "Loading your profile..." }: LoadingPage
         <h2 className="text-2xl font-semibold text-white mb-2">
           {message}
         </h2>
-        
-        {/* Animated dots */}
-        <div className="flex justify-center space-x-1">
-          <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
-          <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-          <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-        </div>
-        
+
+        <LoadingDots />
+
         <p className="text-gray-400 mt-4 text-sm">
           Please wait while we prepare your dashboard...
         </p>

@@ -10,6 +10,7 @@ import {
   IconHome,
   IconNewSection,
   IconTerminal2,
+  IconUser,
 } from "@tabler/icons-react";
 
 export function FloatingDockDemo() {
@@ -21,7 +22,7 @@ export function FloatingDockDemo() {
       ),
       href: "https://leftoversnextjs-pyhl.vercel.app/",
     },
-{
+    {
       title: "Creat new Post",
       icon: (
         <IconNewSection className="h-full w-full text-neutral-500 dark:text-neutral-300" />
@@ -29,13 +30,22 @@ export function FloatingDockDemo() {
       href: "#",
     },
     {
-      title: "",
+      title: "Sponsor Page",
       icon: (
         <IconTerminal2 className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "/SponsorPage",
       
     },
+        {
+      title: "Profile",
+      icon: (
+        <IconUser className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+      ),
+      href: "/profilePage",
+      
+    },
+
     
 
     

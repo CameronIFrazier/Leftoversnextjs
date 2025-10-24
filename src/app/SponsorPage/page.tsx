@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
+import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 
 type Sponsor = {
   name: string;
@@ -100,7 +101,7 @@ export default function SponsorPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">Sponsors</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 "> Sponsors</h1>
             <p className="text-sm text-gray-300">
               Discover partners and organizations supporting our community.
             </p>
@@ -127,6 +128,11 @@ export default function SponsorPage() {
         </div>
         
       </section>
+      
+      {/* Fixed dock at bottom */}
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+        <FloatingDockDemo />
+      </div>
     </section>
     </>
   );

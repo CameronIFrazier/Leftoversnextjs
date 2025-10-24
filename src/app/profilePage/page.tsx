@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, use } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
+import LoadingDots from "../components/ui/LoadingDots";
 interface Post {
   id: number;
   title: string;
@@ -142,8 +143,8 @@ const [userId, setUserId] = useState<number | null>(null);
           {/* Profile box */}
           <section className="w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white border border-white rounded-lg bg-black-300">
             {userName ? (
-              <h2 className="text-xl font-bold text-indigo-500 mb-2">
-                @{userName}
+              <h2 className="text-2xl font-bold text-indigo-500 mb-2">
+                Welcome back, {userName} 
               </h2>
             ) : (
               <p>Loading username...</p>
@@ -155,7 +156,7 @@ const [userId, setUserId] = useState<number | null>(null);
                 className="w-32 h-32 rounded-full border-2 border-white mb-4"
               />
             ) : (
-              <p>Loading profile picture...</p>
+              <LoadingDots />
             )}
             <input
               type="file"
