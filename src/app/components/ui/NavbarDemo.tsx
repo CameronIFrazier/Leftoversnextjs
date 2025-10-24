@@ -33,6 +33,10 @@ export function NavbarDemo() {
       name: "Contact",
       link: "#contact",
     },
+    {
+      name: "Sponsors",
+      link: "/SponsorPage",
+    },
   ];
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
