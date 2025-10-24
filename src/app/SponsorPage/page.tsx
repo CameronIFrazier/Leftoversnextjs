@@ -29,6 +29,61 @@ const SPONSORS: Sponsor[] = [
     location: "Newark, New Jersey",
     website: "https://dignitas.gg/",
   },
+    {
+        name: "Cloud9",
+        description: "Cloud9 is a premier North American esports organization known for its championship-winning teams and strong presence across games like League of Legends, VALORANT, and Counter-Strike. It’s recognized for its commitment to excellence and player development.",
+        location: "Los Angeles, California",
+        website: "https://www.cloud9.gg/",
+    },
+    {
+        name: "FaZe Clan",
+        description: "FaZe Clan is one of the most prominent lifestyle and esports organizations in the world, known for its dominance in competitive gaming and massive influence in pop culture, entertainment, and apparel.",
+        location: "Los Angeles, California",
+        website: "https://fazeclan.com/",
+    },
+    {
+        name: "NRG Esports",
+        description: "NRG Esports is a leading North American organization competing in top titles like Rocket League, VALORANT, and Apex Legends. Known for its creative branding and community engagement, NRG blends competitive success with entertainment flair.",
+        location: "Los Angeles, California",
+        website: "https://www.nrg.gg/",
+    },
+    {
+        name: "Sentinels",
+        description: "Sentinels is an American esports organization known for its success in VALORANT and Halo. It’s recognized for its strong fan base, elite rosters, and engaging content creation.",
+        location: "Los Angeles, California",
+        website: "https://www.sentinels.gg/",
+    },
+
+    {
+        name: "Dignitas",
+        description: "Dignitas is an international esports organization and one of the most iconic and recognizable brands in the professional gaming industry, fielding teams in the world's largest and most popular games.",
+        location: "Newark, New Jersey",
+        website: "https://dignitas.gg/",
+    },
+    {
+        name: "G2 Esports",
+        description: "G2 Esports is a leading European esports organization known for its dominance in games like League of Legends, VALORANT, and Counter-Strike. Founded by former pro player Carlos 'Ocelote' Rodríguez, G2 is recognized for its elite rosters and strong entertainment brand.",
+        location: "Berlin, Germany",
+        website: "https://g2esports.com/",
+    },
+    {
+        name: "OpTic Gaming",
+        description: "OpTic Gaming is an iconic North American esports organization with roots in competitive Call of Duty. Known as ‘The Green Wall,’ OpTic has expanded into games like Halo, VALORANT, and Rocket League.",
+        location: "Frisco, Texas",
+        website: "https://opticgaming.com/",
+    },
+    {
+        name: "Complexity Gaming",
+        description: "Complexity Gaming is one of the longest-running North American esports organizations, competing in games such as Counter-Strike, Rocket League, and Madden. The organization is known for its professionalism and partnership with the Dallas Cowboys.",
+        location: "Frisco, Texas",
+        website: "https://complexity.gg/",
+    },
+    {
+        name: "Team Vitality",
+        description: "Team Vitality is a top-tier European esports organization competing in games like League of Legends, Counter-Strike, and Rocket League. Known for its bold branding and high-level competition, Vitality has become a cornerstone of the EU esports scene.",
+        location: "Paris, France",
+        website: "https://vitality.gg/",
+    },
   
 ];
 
