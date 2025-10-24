@@ -29,11 +29,6 @@ export function LoadingPage({ message = "Loading your profile..." }: LoadingPage
           <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
         </div>
         
-        {/* Progress bar */}
-        <div className="mt-6 w-64 bg-gray-700 rounded-full h-2">
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full animate-pulse"></div>
-        </div>
-        
         <p className="text-gray-400 mt-4 text-sm">
           Please wait while we prepare your dashboard...
         </p>
