@@ -199,7 +199,7 @@ const [userId, setUserId] = useState<number | null>(null);
             />
             <button
               onClick={saveBio}
-              className="mt-2 px-4 py-2 bg-indigo-500 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white"
+              className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white"
             >
               Save Bio
             </button>
@@ -207,17 +207,17 @@ const [userId, setUserId] = useState<number | null>(null);
 
           {/* 🔹 Post Creation Section */}
           <section className="h-auto rounded-lg mt-5 flex flex-col p-4 bg-black">
-            <h1 className="text-lg font-semibold mb-3">Create a New Post</h1>
+            <h1 className="text-lg font-semibold mb-3">New Post</h1>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Post Title"
+              placeholder="Title"
               className="w-full p-2 mb-2 rounded bg-indigo-900"
             />
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Post Description"
+              placeholder="Description"
               className="w-full p-2 mb-2 rounded bg-indigo-900"
               rows={4}
             />
@@ -228,15 +228,17 @@ const [userId, setUserId] = useState<number | null>(null);
             />
             <button
               onClick={handleCreatePost}
-              className="px-4 py-2 bg-indigo-500 rounded hover:bg-indigo-600"
+              className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
             >
               Create Post
             </button>
           </section>
 
+              {/* Divider */}
+            <div className="my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
           {/* 🔹 Past Posts Section */}
           <section className="h-auto rounded-lg mt-5 flex flex-col items-center justify-start bg-black p-4">
-            <h1 className="text-2xl font-bold mb-4 bg-gradient-to-b from-indigo-300 to-purple-500 bg-clip-text text-transparent">Posts History</h1>
+            <h1 className="text-2xl font-bold mb-4 text-white-300">Posts History</h1>
             <div className="w-full flex flex-col gap-4">
               {posts.length === 0 ? (
                 <p>No posts yet.</p>
@@ -266,7 +268,7 @@ const [userId, setUserId] = useState<number | null>(null);
         <section className="w-[20%] h-auto bg-black flex flex-col">
           <GradientBorder>
             <section className="h-[1020px] rounded-lg flex flex-col items-center justify-start bg-black p-4">
-              <h1 className="mb-5 text-white">People you may know</h1>
+              <h1 className="mb-5 text-purple-300 font-bold">People you may know</h1>
               <div className="w-[90%] h-[90%] bg-indigo-900 rounded-lg"></div>
             </section>
           </GradientBorder>
