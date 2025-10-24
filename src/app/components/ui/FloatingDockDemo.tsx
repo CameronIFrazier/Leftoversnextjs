@@ -2,6 +2,7 @@ import React from "react";
 import { FloatingDock } from "./floating-dock";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 import {
   IconBrandGithub,
@@ -31,7 +32,14 @@ export function FloatingDockDemo() {
     {
       title: "Sponsors",
       icon: (
-        <IconTerminal2 className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+        <Image
+          src="/s.svg"            // file at /public/s.svg
+          alt="Sponsors"
+          width={32}
+          height={32}
+          className="h-full w-full object-contain"
+          priority
+        />
       ),
       href: "/SponsorPage",
       
