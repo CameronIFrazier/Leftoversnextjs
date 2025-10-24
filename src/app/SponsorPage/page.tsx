@@ -4,7 +4,7 @@ export default function SponsorPage() {
       <h1>Our Sponsors</h1>
 
       <p>
-        <strong>100 Treasures:</strong> 100 Treasures is an LA-based esports & lifestyle brand founded
+        <strong>100 Treasures</strong> 100 Treasures is an LA-based esports & lifestyle brand founded
         in 2017. This team typically competes across titles such as Call of Duty, Valorant, Apex Legens,
         and etc. Most importantly 100 Treasures has won the 2022 Call of Duty League Championship.
       </p>
