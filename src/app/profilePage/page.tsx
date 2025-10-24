@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, use } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
+import LoadingDots from "../components/ui/LoadingDots";
+import GradientBorder from "../components/ui/GradientBorder";
 interface Post {
   id: number;
   title: string;
@@ -136,14 +138,14 @@ const [userId, setUserId] = useState<number | null>(null);
 
   return (
     <section className="w-full flex flex-col items-center bg-black text-white">
-      <section className="w-[70%] flex flex-row items-start justify-center pb-5 pt-5">
+      <section className="w-[98%] flex flex-row items-start justify-center pb-5 pt-5">
         {/* Left side */}
         <section className="w-[60%] h-auto pr-5">
           {/* Profile box */}
-          <section className="w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white border border-white rounded-lg bg-black-300">
+          <section className="w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white rounded-lg bg-black-300">
             {userName ? (
-              <h2 className="text-xl font-bold text-indigo-500 mb-2">
-                @{userName}
+              <h2 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 bg-clip-text text-transparent mb-2">
+                Welcome back, {userName} 
               </h2>
             ) : (
               <p>Loading username...</p>
@@ -152,10 +154,10 @@ const [userId, setUserId] = useState<number | null>(null);
               <img
                 src={profilePic}
                 alt="Profile Picture"
-                className="w-32 h-32 rounded-full border-2 border-white mb-4"
+                className="w-32 h-32 rounded-full mb-4"
               />
             ) : (
-              <p>Loading profile picture...</p>
+              <LoadingDots />
             )}
             <input
               type="file"
@@ -192,31 +194,31 @@ const [userId, setUserId] = useState<number | null>(null);
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Write your bio..."
-              className="w-full p-2 border border-white rounded-lg text-white bg-indigo-900"
+              className="w-full p-2 rounded-lg text-white bg-indigo-900"
               rows={5}
             />
             <button
               onClick={saveBio}
-              className="mt-2 px-4 py-2 bg-indigo-500 rounded hover:bg-indigo-600"
+              className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white"
             >
               Save Bio
             </button>
           </section>
 
           {/* 🔹 Post Creation Section */}
-          <section className="h-auto border border-white rounded-lg mt-5 flex flex-col p-4 bg-black">
-            <h1 className="text-lg font-semibold mb-3">Create a New Post</h1>
+          <section className="h-auto rounded-lg mt-5 flex flex-col p-4 bg-black">
+            <h1 className="text-lg font-semibold mb-3">New Post</h1>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Post Title"
-              className="w-full p-2 mb-2 border border-white rounded bg-indigo-900"
+              placeholder="Title"
+              className="w-full p-2 mb-2 rounded bg-indigo-900"
             />
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Post Description"
-              className="w-full p-2 mb-2 border border-white rounded bg-indigo-900"
+              placeholder="Description"
+              className="w-full p-2 mb-2 rounded bg-indigo-900"
               rows={4}
             />
             <input
@@ -226,15 +228,17 @@ const [userId, setUserId] = useState<number | null>(null);
             />
             <button
               onClick={handleCreatePost}
-              className="px-4 py-2 bg-indigo-500 rounded hover:bg-indigo-600"
+              className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
             >
               Create Post
             </button>
           </section>
 
+              {/* Divider */}
+            <div className="my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
           {/* 🔹 Past Posts Section */}
-          <section className="h-auto border border-white rounded-lg mt-5 flex flex-col items-center justify-start bg-black p-4">
-            <h1 className="text-lg font-semibold mb-4">Past Posts</h1>
+          <section className="h-auto rounded-lg mt-5 flex flex-col items-center justify-start bg-black p-4">
+            <h1 className="text-2xl font-bold mb-4 text-white-300">Posts History</h1>
             <div className="w-full flex flex-col gap-4">
               {posts.length === 0 ? (
                 <p>No posts yet.</p>
@@ -242,7 +246,7 @@ const [userId, setUserId] = useState<number | null>(null);
                 posts.map((post) => (
                   <div
                     key={post.id}
-                    className="border border-indigo-500 rounded-lg p-3 bg-indigo-900"
+                    className="-500 rounded-lg p-3 bg-indigo-900"
                   >
                     <h2 className="font-bold">{post.title}</h2>
                     <p>{post.description}</p>
@@ -261,11 +265,13 @@ const [userId, setUserId] = useState<number | null>(null);
         </section>
 
         {/* Right side */}
-        <section className="w-[15%] h-auto bg-black flex flex-col">
-          <section className="h-[1020px] border border-white rounded-lg flex flex-col items-center justify-start bg-black">
-            <h1 className="mb-5">People You May Know</h1>
-            <div className="w-[90%] h-[90%] bg-indigo-900 border border-white rounded-lg"></div>
-          </section>
+        <section className="w-[20%] h-auto bg-black flex flex-col">
+          <GradientBorder>
+            <section className="h-[1020px] rounded-lg flex flex-col items-center justify-start bg-black p-4">
+              <h1 className="mb-5 text-purple-300 font-bold">People you may know</h1>
+              <div className="w-[90%] h-[90%] bg-indigo-900 rounded-lg"></div>
+            </section>
+          </GradientBorder>
         </section>
       </section>
 
