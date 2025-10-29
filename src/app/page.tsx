@@ -6,11 +6,16 @@ import { GlobeDemo } from "./components/ui/GlobeDemo";
 import { ShineBorderDemo } from "./components/ui/ShineBorderDemo";
 import { ShineBorder } from "./components/ui/shineborder";
 export default function Home() {
+const token = localStorage.getItem("token");
+
+//fixing main on github 10/29 4:10pm
+  
   return (
     <>
       {/*<BackgroundBeamsWithCollisionDemo></BackgroundBeamsWithCollisionDemo> */}
       <div className="flex flex-col bg-black min-h-screen w-screen items-center justify-start ">
         <NavbarDemo></NavbarDemo>
+        
         <div className="flex-col relative items-start justify-start w-[70%] ">
            <div className="w-full my-4 mt-20">
   <hr className="border-t-2 border-white" />
