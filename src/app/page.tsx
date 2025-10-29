@@ -6,7 +6,12 @@ import { GlobeDemo } from "./components/ui/GlobeDemo";
 import { ShineBorderDemo } from "./components/ui/ShineBorderDemo";
 import { ShineBorder } from "./components/ui/shineborder";
 export default function Home() {
-const token = localStorage.getItem("token");
+  // Avoid accessing localStorage during server-side rendering.
+  // Guard access so this code is safe both on server and client.
+  let token: string | null = null;
+  if (typeof window !== "undefined") {
+    token = localStorage.getItem("token");
+  }
 
 //fixing main on github 10/29 4:10pm
   
