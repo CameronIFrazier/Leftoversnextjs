@@ -9,7 +9,7 @@ export default function ContactPage() {
         <div className="space-y-4">
           <h1 className="text-3xl font-bold text-white text-center">Contact Us</h1>
           <p className="text-neutral-400 text-center">
-            Have questions? We'd love to hear from you. Send us a message and we'll
+            Have questions? We&apos;d love to hear from you. Send us a message and we&apos;ll
             respond as soon as possible.
           </p>
           <div className="text-center space-y-4">
