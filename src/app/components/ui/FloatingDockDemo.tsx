@@ -45,6 +45,22 @@ export function FloatingDockDemo() {
       href: "/SponsorPage",
       
     },
+    
+    {
+      title: "Inbox",
+      icon: (
+        <Image
+          src="/inbox-svgrepo-com.svg"            // file at /public/s.svg
+          alt="Inbox"
+          width={32}
+          height={32}
+          className="h-full w-full object-contain"
+          priority
+        />
+      ),
+      href: "/Inbox",
+      
+    },
         {
       title: "Profile",
       icon: (
