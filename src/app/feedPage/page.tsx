@@ -122,7 +122,7 @@ function SponsorsList({ sponsors }: { sponsors: Sponsor[] }) {
   );
 }
 
-export function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
+function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
   return (
     // inner aside should be full width of its parent column — width is controlled by the wrapper
     <aside className="sticky top-4 flex w-full flex-col gap-4">
