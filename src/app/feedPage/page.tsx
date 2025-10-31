@@ -2,6 +2,19 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 
+// Loading dots component
+function LoadingDots() {
+  return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex space-x-2">
+        <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+        <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+        <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce"></div>
+      </div>
+    </div>
+  );
+}
+
 interface Post {
   id: number;
   title: string;
@@ -233,6 +246,7 @@ export default function Home() {
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
    const user: User = {
     name: "Eric Lee",
@@ -251,21 +265,27 @@ export default function Home() {
   // Fetch posts
   useEffect(() => {
     async function fetchPosts() {
-      const res = await fetch("/api/getFeed");
-      const data = await res.json();
-      // Normalize incoming post objects to ensure we have a `username` and `avatar` field
-      const normalized = (data || []).map((p: Record<string, unknown>) => {
-        const id = typeof p["id"] === "number" ? (p["id"] as number) : Number(p["id"]);
-        const title = p["title"] ? String(p["title"]) : "";
-        const description = p["description"] ? String(p["description"]) : "";
-        const media_url = (p["media_url"] ?? p["mediaUrl"] ?? null) as string | null;
-        const created_at = (p["created_at"] ?? p["createdAt"] ?? null) as string | null;
-        const username = (p["username"] ?? p["userName"] ?? p["user_name"] ?? p["name"] ?? null) as string | null;
-        const avatar = (p["avatar"] ?? p["profile_pic"] ?? p["profilePic"] ?? null) as string | null;
-        return { id, title, description, media_url, created_at, username, avatar };
-      });
+      try {
+        const res = await fetch("/api/getFeed");
+        const data = await res.json();
+        // Normalize incoming post objects to ensure we have a `username` and `avatar` field
+        const normalized = (data || []).map((p: Record<string, unknown>) => {
+          const id = typeof p["id"] === "number" ? (p["id"] as number) : Number(p["id"]);
+          const title = p["title"] ? String(p["title"]) : "";
+          const description = p["description"] ? String(p["description"]) : "";
+          const media_url = (p["media_url"] ?? p["mediaUrl"] ?? null) as string | null;
+          const created_at = (p["created_at"] ?? p["createdAt"] ?? null) as string | null;
+          const username = (p["username"] ?? p["userName"] ?? p["user_name"] ?? p["name"] ?? null) as string | null;
+          const avatar = (p["avatar"] ?? p["profile_pic"] ?? p["profilePic"] ?? null) as string | null;
+          return { id, title, description, media_url, created_at, username, avatar };
+        });
 
-      setPosts(normalized);
+        setPosts(normalized);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
     fetchPosts();
   }, []);
@@ -369,7 +389,7 @@ export default function Home() {
   
 
   return (
-    <div className="h-full w-full flex justify-center bg-black text-white p-6">
+    <div className="h-full w-full flex justify-center bg-black text-white p-6 min-h-screen">
       {/**Left Side content */}
 <aside className="hidden lg:flex lg:w-1/4">
         <div className="sticky top-4 w-full">
@@ -382,7 +402,10 @@ export default function Home() {
         <h1 className="text-2xl font-bold mb-4 text-white">Feed</h1>
 
         <div className="w-full flex flex-col gap-4">
-          {posts.map((post) => (
+          {isLoading ? (
+            <LoadingDots />
+          ) : (
+            posts.map((post) => (
             <div key={post.id} className="rounded-lg p-3 bg-indigo-900 text-white">
               <div className="flex items-center gap-3 mb-2">
                 {post.avatar ? (
@@ -455,7 +478,8 @@ export default function Home() {
                 </form>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </section>
       {/* Right Sidebar */}
