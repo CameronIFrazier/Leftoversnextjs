@@ -1,151 +1,145 @@
-import React, { useMemo } from "react";
+// src/app/feedPage/page.tsx
+"use client";
 
-// ---- Types ----
-export type Sponsor = {
-  id: string;
-  name: string;
-  description: string;
-  logoUrl?: string;
-  href?: string;
-};
+import React, { useEffect, useMemo, useState } from "react";
+import { SPONSORS } from "@/app/sponsorData/sponsor"; // adjust if moved
 
-export type User = {
-  name: string;
-  handle?: string;
-  avatarUrl?: string;
-};
-
-// ---- Utilities ----
-function pickRandomSponsors(list: Sponsor[], count = 3): Sponsor[] {
-  // Deduplicate by id and pick a shuffled slice without mutating the input
-  const unique = Array.from(new Map(list.map(s => [s.id ?? s.name, s])).values());
-  for (let i = unique.length - 1; i > 0; i--) {
+// pick 3 random sponsors
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [unique[i], unique[j]] = [unique[j], unique[i]];
+    [copy[i], copy[j]] = [copy[j], copy[i]];
   }
-  return unique.slice(0, Math.max(0, Math.min(count, unique.length)));
+  return copy.slice(0, Math.min(n, copy.length));
 }
 
-// ---- Mini Profile Card ----
-function MiniProfile({ user }: { user: User }) {
-  return (
-    <div className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 overflow-hidden rounded-full border border-white/20">
-          {/* Avatar */}
-          {user.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-white/70">
-              {user.name?.[0] ?? "?"}
-            </div>
-          )}
-        </div>
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-white">{user.name}</div>
-          {user.handle && (
-            <div className="truncate text-xs text-white/60">@{user.handle}</div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+export default function FeedPage() {
+  const [userName, setUserName] = useState<string | null>(null);
+  const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [highlight, setHighlight] = useState<string | null>(null);
 
-// ---- Sponsors Card List ----
-function SponsorsList({ sponsors }: { sponsors: Sponsor[] }) {
-  const randomThree = useMemo(() => pickRandomSponsors(sponsors, 3), [sponsors]);
 
-  return (
-    <div className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-white">Featured Sponsors</h3>
-        <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">Random 3</span>
-      </div>
-      <ul className="space-y-3">
-        {randomThree.map((s) => (
-          <li key={s.id} className="group">
-            <a
-              href={s.href ?? "#"}
-              className="flex items-center gap-3 rounded-xl border border-white/10 p-3 transition hover:border-indigo-400/50 hover:bg-white/5"
-            >
-              <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-white/10">
-                {s.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.logoUrl} alt={s.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-[10px] text-white/70">
-                    {s.name.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-white">{s.name}</div>
-                <div className="truncate text-xs text-white/60">{s.description}</div>
-              </div>
-            </a>
-          </li>
-        ))}
-        {randomThree.length === 0 && (
-          <li className="text-xs text-white/60">No sponsors found.</li>
-        )}
-      </ul>
-    </div>
-  );
-}
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => setIsClient(true), []);
 
-// ---- Right Sidebar (Eric's section) ----
-export function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
-  return (
-    <aside className="sticky top-4 flex w-full flex-col gap-4 xl:w-1/4">
-      <MiniProfile user={user} />
-      <SponsorsList sponsors={sponsors} />
-    </aside>
-  );
-}
+  // random sponsors once
+  const sponsorPicks = useMemo(() => pickRandom(SPONSORS, 3), []);
 
-// ---- Example Home layout wiring ----
-// This shows how to keep a center feed with space and your right-hand column ~1/4 width on xl screens.
-// On smaller screens the sidebar will stack below; tweak breakpoints as you prefer.
-export default function Home() {
-  // Example data – replace with your real user/sponsor sources.
-  const user: User = {
-    name: "Eric Lee",
-    handle: "eric",
-    avatarUrl: "/pfp.png",
-  };
+  // fetch user info (same APIs as profile page)
+  useEffect(() => {
+    async function load() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-  const sponsors: Sponsor[] = [
-    { id: "100t", name: "100 Thieves", description: "Gaming org based in LA", logoUrl: "/logos/100t.png", href: "/sponsors/100t" },
-    { id: "liquid", name: "Team Liquid", description: "Global esports team", logoUrl: "/logos/tl.png", href: "/sponsors/team-liquid" },
-    { id: "sentinels", name: "Sentinels", description: "Esports org from LA", logoUrl: "/logos/sen.png" },
-    { id: "c9", name: "Cloud9", description: "Esports org from NA", logoUrl: "/logos/c9.png" },
-    { id: "guard", name: "The Guard", description: "LA-based esports org" },
-  ];
+      try {
+        const [resUser, resPfp, resHighlight] = await Promise.all([
+          fetch("/api/getUserName", { headers: { Authorization: `Bearer ${token}` } }),
+          fetch("/api/getUserPfp", { headers: { Authorization: `Bearer ${token}` } }),
+          fetch("/api/getUserHighlight", { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+
+        const dataUser = await resUser.json();
+        const dataPfp = await resPfp.json();
+        const dataHighlight = await resHighlight.json();
+
+        if (dataUser?.userName) setUserName(dataUser.userName);
+        if (dataPfp?.profilePic) setProfilePic(dataPfp.profilePic);
+        if (dataHighlight?.highlight) setHighlight(dataHighlight.highlight);
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      }
+    }
+    load();
+  }, []);
 
   return (
-    <main className="min-h-screen bg-black px-4 py-6 text-white">
-      <div className="mx-auto max-w-7xl">
-        {/* Grid: [left spacer] [center feed] [right sidebar (~1/4)] */}
+    <main className="min-h-screen bg-black text-white">
+      <div className="mx-auto max-w-7xl px-4 py-6">
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-          {/* Center Feed (leaves some whitespace to the left on wide screens) */}
+
+          {/* FEED CONTENT */}
           <section className="xl:col-span-8">
-            <div className="rounded-2xl border border-white/20 bg-black/40 p-4">
-              <h1 className="mb-4 text-xl font-bold">Feed</h1>
-              <div className="space-y-4">
-                {/* Feed items go here */}
-                <div className="rounded-xl border border-white/10 p-4">Hello</div>
-                <div className="rounded-xl border border-white/10 p-4">Post #2</div>
-                <div className="rounded-xl border border-white/10 p-4">Post #3</div>
-              </div>
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+              <h1 className="text-xl font-bold mb-4">Feed</h1>
+              {/* TODO: Feed Posts */}
+              <div className="rounded-xl border border-white/10 p-4">Post 1</div>
+              <div className="rounded-xl border border-white/10 p-4">Post 2</div>
             </div>
           </section>
 
-          {/* Right Sidebar (~1/4 width) */}
-          <div className="xl:col-span-3 xl:col-start-10">
-            <RightSidebar user={user} sponsors={sponsors} />
-          </div>
+          {/* RIGHT SIDEBAR */}
+          {isClient && (
+            <aside className="xl:col-span-3 xl:col-start-10 sticky top-4 flex flex-col gap-4">
+
+              {/* MINI PROFILE */}
+              <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 rounded-full border border-white/15 overflow-hidden shrink-0 bg-black flex items-center justify-center">
+                    {profilePic ? (
+                      <img src={profilePic} alt="pfp" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-xs text-white/60">
+                        {userName?.[0] ?? "?"}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold">
+                      {userName ?? "Loading..."}
+                    </div>
+                    {userName && (
+                      <div className="truncate text-sm text-white/60">@{userName.toLowerCase()}</div>
+                    )}
+                  </div>
+                </div>
+
+                {highlight && (
+                  <div className="mt-2 truncate text-xs text-white/60">{highlight}</div>
+                )}
+              </div>
+
+              {/* RANDOM SPONSORS */}
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Featured Sponsors</h3>
+                  <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">
+                  </span>
+                </div>
+
+                <ul className="space-y-3">
+                  {sponsorPicks.map((sponsor) => (
+                    <li key={sponsor.name}>
+                      <a
+                        href={sponsor.website ?? "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 rounded-xl border border-white/10 p-3 hover:bg-white/5 transition"
+                      >
+                        <div className="h-9 w-9 rounded-lg border border-white/10 overflow-hidden flex items-center justify-center bg-black">
+                          {sponsor.logo ? (
+                            <img src={sponsor.logo} className="h-full w-full object-contain p-1" />
+                          ) : (
+                            <span className="text-[10px] text-white/70">
+                              {sponsor.short ?? sponsor.name.slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium">{sponsor.name}</div>
+                          <div className="truncate text-xs text-white/60">
+                            {sponsor.location}
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+            </aside>
+          )}
         </div>
       </div>
     </main>

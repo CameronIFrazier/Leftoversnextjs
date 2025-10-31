@@ -1,147 +1,208 @@
-// src/app/feedPage/page.tsx
 "use client";
+import React, { useMemo, useState } from "react";
+import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
+import GradientBorder from "../components/ui/GradientBorder";
+import Image from "next/image";
+import Link from "next/link";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { SPONSORS } from "@/app/sponsorData/sponsor"; // adjust if moved
+type Sponsor = {
+  name: string;
+  short?: string;
+  description: string;
+  location?: string;
+  website?: string;
+  logo: string; // Path to the logo image in public/sponsors directory
+};
 
-// pick 3 random sponsors
-function pickRandom<T>(arr: T[], n: number): T[] {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy.slice(0, Math.min(n, copy.length));
-}
+const SPONSORS: Sponsor[] = [
+  {
+    name: "100 Thieves",
+    short: "100T",
+    description: "100 Thieves is a premium lifestyle brand and eSports gaming company. 100 Thieves' eSports teams have competed and won championships in some of the top games worldwide, including League of Legends, Call of Duty, and VALORANT and have collaborated with leading companies such as Rockstar, Lexus, JBL, the NBA2K franchise.",
+    location: "Los Angeles, CA",
+    website: "https://100thieves.com",
+    logo: "/sponsors/100thieves.png"
+  },
+  {
+    name: "Team Liquid",
+    description: "Team Liquid is one of the biggest esports brands in the world. More than just a successful competitive gaming team, we are a broad based enterprise with businesses in online properties, video production, and influencer and campaign management. We have multiple championships across a dozen games, the highest earning team in the world, and the longest brand partnership in esports with Alienware.",
+    location: "Santa Monica, CA",
+    website: "https://www.teamliquid.com",
+    logo: "/sponsors/teamliquid.png"
+  },
+  {
+    name: "Dignitas",
+    description: "Dignitas is an international esports organization and one of the most iconic and recognizable brands in the professional gaming industry, fielding teams in the world's largest and most popular games.",
+    location: "Newark, New Jersey",
+    website: "https://dignitas.gg/",
+    logo: "/sponsors/dignitas.png"
+  },
+  {
+    name: "Cloud9",
+    description: "Cloud9 is a premier North American esports organization known for its championship-winning teams and strong presence across games like League of Legends, VALORANT, and Counter-Strike. It's recognized for its commitment to excellence and player development.",
+    location: "Los Angeles, California",
+    website: "https://www.cloud9.gg/",
+    logo: "/sponsors/cloud9.png"
+  },
+  {
+    name: "FaZe Clan",
+    description: "FaZe Clan is one of the most prominent lifestyle and esports organizations in the world, known for its dominance in competitive gaming and massive influence in pop culture, entertainment, and apparel.",
+    location: "Los Angeles, California",
+    website: "https://fazeclan.com/",
+    logo: "/sponsors/faze-clan.png"
+  },
+  {
+    name: "NRG Esports",
+    description: "NRG Esports is a leading North American organization competing in top titles like Rocket League, VALORANT, and Apex Legends. Known for its creative branding and community engagement, NRG blends competitive success with entertainment flair.",
+    location: "Los Angeles, California",
+    website: "https://www.nrg.gg/",
+    logo: "/sponsors/nrg-esports.png"
+  },
+  {
+    name: "Sentinels",
+    description: "Sentinels is an American esports organization known for its success in VALORANT and Halo. It's recognized for its strong fan base, elite rosters, and engaging content creation.",
+    location: "Los Angeles, California",
+    website: "https://www.sentinels.gg/",
+    logo: "/sponsors/sentinels.png"
+  },
+  {
+      name: "G2 Esports",
+      description: "G2 Esports is a leading European esports organization known for its dominance in games like League of Legends, VALORANT, and Counter-Strike. Founded by former pro player Carlos 'Ocelote' Rodríguez, G2 is recognized for its elite rosters and strong entertainment brand.",
+      location: "Berlin, Germany",
+      website: "https://g2esports.com/",
+      logo: "/sponsors/g2-esports.png"
+  },
+  {
+      name: "OpTic Gaming",
+      description: "OpTic Gaming is an iconic North American esports organization with roots in competitive Call of Duty. Known as 'The Green Wall,' OpTic has expanded into games like Halo, VALORANT, and Rocket League.",
+      location: "Frisco, Texas",
+      website: "https://opticgaming.com/",
+      logo: "/sponsors/optic-gaming.png"
+  },
+  {
+      name: "Complexity Gaming",
+      description: "Complexity Gaming is one of the longest-running North American esports organizations, competing in games such as Counter-Strike, Rocket League, and Madden. The organization is known for its professionalism and partnership with the Dallas Cowboys.",
+      location: "Frisco, Texas",
+      website: "https://complexity.gg/",
+      logo: "/sponsors/complexity-gaming.png"
+  },
+  {
+      name: "Team Vitality",
+      description: "Team Vitality is a top-tier European esports organization competing in games like League of Legends, Counter-Strike, and Rocket League. Known for its bold branding and high-level competition, Vitality has become a cornerstone of the EU esports scene.",
+      location: "Paris, France",
+      website: "https://vitality.gg/",
+      logo: "/sponsors/team-vitality.png"
+  },
+  
+];
 
-export default function FeedPage() {
-  const [userName, setUserName] = useState<string | null>(null);
-  const [profilePic, setProfilePic] = useState<string | null>(null);
-  const [highlight, setHighlight] = useState<string | null>(null);
-
-
-  const [isClient, setIsClient] = useState(false);
-  useEffect(() => setIsClient(true), []);
-
-  // random sponsors once
-  const sponsorPicks = useMemo(() => pickRandom(SPONSORS, 3), []);
-
-  // fetch user info (same APIs as profile page)
-  useEffect(() => {
-    async function load() {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const [resUser, resPfp, resHighlight] = await Promise.all([
-          fetch("/api/getUserName", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/getUserPfp", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/getUserHighlight", { headers: { Authorization: `Bearer ${token}` } }),
-        ]);
-
-        const dataUser = await resUser.json();
-        const dataPfp = await resPfp.json();
-        const dataHighlight = await resHighlight.json();
-
-        if (dataUser?.userName) setUserName(dataUser.userName);
-        if (dataPfp?.profilePic) setProfilePic(dataPfp.profilePic);
-        if (dataHighlight?.highlight) setHighlight(dataHighlight.highlight);
-      } catch (err) {
-        console.error("Error loading profile:", err);
-      }
-    }
-    load();
-  }, []);
+// Sponsor card generate
+function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
+  const initials =
+    sponsor.short ??
+    sponsor.name
+      .split(" ")
+      .map((s) => s[0])
+      .join("")
+      .slice(0, 3)
+      .toUpperCase();
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-
-          {/* FEED CONTENT */}
-          <section className="xl:col-span-8">
-            <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-              <h1 className="text-xl font-bold mb-4">Feed</h1>
-              {/* TODO: Feed Posts */}
-              <div className="rounded-xl border border-white/10 p-4">Post 1</div>
-              <div className="rounded-xl border border-white/10 p-4">Post 2</div>
-            </div>
-          </section>
-
-          {/* RIGHT SIDEBAR */}
-          {isClient && (
-            <aside className="xl:col-span-3 xl:col-start-10 sticky top-4 flex flex-col gap-4">
-
-              {/* MINI PROFILE */}
-              <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-full border border-white/15 overflow-hidden shrink-0 bg-black flex items-center justify-center">
-                    {profilePic ? (
-                      <img src={profilePic} alt="pfp" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-xs text-white/60">
-                        {userName?.[0] ?? "?"}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="truncate font-semibold">
-                      {userName ?? "Loading..."}
-                    </div>
-                    {userName && (
-                      <div className="truncate text-sm text-white/60">@{userName.toLowerCase()}</div>
-                    )}
-                  </div>
-                </div>
-
-                {highlight && (
-                  <div className="mt-2 truncate text-xs text-white/60">{highlight}</div>
-                )}
-              </div>
-
-              {/* RANDOM SPONSORS */}
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Featured Sponsors</h3>
-                  <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">
-                  </span>
-                </div>
-
-                <ul className="space-y-3">
-                  {sponsorPicks.map((sponsor) => (
-                    <li key={sponsor.name}>
-                      <a
-                        href={sponsor.website ?? "#"}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-3 rounded-xl border border-white/10 p-3 hover:bg-white/5 transition"
-                      >
-                        <div className="h-9 w-9 rounded-lg border border-white/10 overflow-hidden flex items-center justify-center bg-black">
-                          {sponsor.logo ? (
-                            <img src={sponsor.logo} className="h-full w-full object-contain p-1" />
-                          ) : (
-                            <span className="text-[10px] text-white/70">
-                              {sponsor.short ?? sponsor.name.slice(0, 2).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">{sponsor.name}</div>
-                          <div className="truncate text-xs text-white/60">
-                            {sponsor.location}
-                          </div>
-                        </div>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-            </aside>
+    <GradientBorder>
+    <div className="border border-white rounded-lg p-4 bg-black">
+      {/* Avatar and Name */}
+      <div className="flex items-center gap-3">
+      <div className="w-12 h-12 rounded-full border border-white flex items-center justify-center text-sm font-bold overflow-hidden relative">
+          {sponsor.logo ? (
+            <Image
+              src={sponsor.logo}
+              alt={`${sponsor.name} logo`}
+              fill
+              className="object-contain p-1"
+            />
+          ) : (
+            <span className="relative z-10">{initials}</span>
+          )}
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-indigo-400">
+            {sponsor.name}
+          </h2>
+          {sponsor.location && (
+            <p className="text-sm text-gray-300">{sponsor.location}</p>
           )}
         </div>
       </div>
-    </main>
+
+      {/* Description */}
+      <p className="mt-3 text-sm leading-relaxed text-gray-100">
+        {sponsor.description}
+      </p>
+
+      {/* Website Link Only */}
+      {sponsor.website && (
+        <a
+          href={sponsor.website}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block mt-4 px-3 py-1 rounded-md border border-white text-xs hover:bg-white hover:text-black transition"
+        >
+          Visit Website
+        </a>
+      )}
+    </div>
+    </GradientBorder>
+  );
+}
+
+export default function SponsorPage() {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return SPONSORS;
+    return SPONSORS.filter((s) =>
+      [s.name, s.short, s.description, s.location]
+        .filter(Boolean)
+        .some((field) => (field as string).toLowerCase().includes(q))
+    );
+  }, [query]);
+
+  return (
+    <section className="w-full min-h-screen bg-black text-white flex flex-col items-center">
+      <section className="w-[70%] pb-10 pt-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Sponsors</h1>
+          </div>
+            <p className="text-sm text-gray-300">
+              Discover partners and organizations supporting our community.
+            </p>
+          </div>
+          <div>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search sponsors..."
+              className="px-3 py-2 w-64 rounded-md border border-white bg-indigo-900 placeholder-gray-300 text-white"
+            />
+          </div>
+        </div>
+
+        {/* Card Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.length === 0 ? (
+            <div className="col-span-full border border-white rounded-lg p-6 text-center">
+              <p className="text-gray-300">No sponsors found.</p>
+            </div>
+          ) : (
+            filtered.map((s) => <SponsorCard key={s.name} sponsor={s} />)
+          )}
+        </div>
+      </section>
+      <FloatingDockDemo />
+    </section>
   );
 }
