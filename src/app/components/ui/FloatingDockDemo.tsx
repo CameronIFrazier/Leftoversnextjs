@@ -7,9 +7,12 @@ import Image from "next/image";
 import {
   IconBrandGithub,
   IconBrandX,
+  IconEdit,
   IconExchange,
   IconHome,
+  IconInbox,
   IconNewSection,
+  IconNotebook,
   IconTerminal2,
   IconUser,
 } from "@tabler/icons-react";
@@ -49,14 +52,7 @@ export function FloatingDockDemo() {
     {
       title: "Inbox",
       icon: (
-        <Image
-          src="/inbox-svgrepo-com.svg"            
-          alt="Inbox"
-          width={32}
-          height={32}
-          className="h-full w-full object-contain scale-125"
-          priority
-        />
+        <IconInbox className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "/InboxPage",
       
@@ -72,14 +68,11 @@ export function FloatingDockDemo() {
     {
       title: "Feed",
       icon: (
-        <IconTerminal2 className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+        <IconNotebook className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "/feedPage",
     }
 
-    
-
-    
     
   ];
   return (

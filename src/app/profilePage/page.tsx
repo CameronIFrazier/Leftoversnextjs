@@ -144,7 +144,7 @@ const [userId, setUserId] = useState<number | null>(null);
           {/* Profile box */}
           <section className="w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white rounded-lg bg-black-300">
             {userName ? (
-              <h2 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 bg-clip-text text-transparent mb-2">
+              <h2 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 mb-2 pl-4 pr-4">
                 Welcome back, {userName} 
               </h2>
             ) : (
