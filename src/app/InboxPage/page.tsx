@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 import { useRouter, usePathname } from "next/navigation";
 import {
   IconHome,
@@ -62,13 +63,13 @@ function IconLink({
   return (
     <Link
       href={href}
-      className={`group flex flex-col items-center gap-1 rounded-xl px-3 py-2 transition hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
-        isActive ? "bg-neutral-100 dark:bg-neutral-800" : ""
+      className={`group flex flex-col items-center gap-1 rounded-xl px-3 py-2 transition hover:bg-purple-800 ${
+        isActive ? "bg-purple-800" : ""
       }`}
       aria-label={label}
     >
       <div className="h-6 w-6">{children}</div>
-      <span className="text-xs text-neutral-600 dark:text-neutral-300 group-hover:text-black dark:group-hover:text-white">
+      <span className="text-xs text-purple-300 group-hover:text-white">
         {label}
       </span>
     </Link>
@@ -83,8 +84,8 @@ function Avatar({ name }: { name: string }) {
     .slice(0, 2)
     .toUpperCase();
   return (
-    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
-      <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
+    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-purple-400 bg-indigo-800 shadow-sm">
+      <span className="text-sm font-semibold text-purple-200">
         {initials}
       </span>
     </div>
@@ -93,67 +94,57 @@ function Avatar({ name }: { name: string }) {
 
 export default function InboxPage() {
   const router = useRouter();
+  const [query, setQuery] = useState("");
   const [filterUnread, setFilterUnread] = React.useState(false);
   const [filterStarred, setFilterStarred] = React.useState(false);
 
-  const filtered = MOCK_MESSAGES.filter((m) => {
-    if (filterUnread && !m.unread) return false;
-    if (filterStarred && !m.starred) return false;
-    return true;
-  });
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let messages = MOCK_MESSAGES;
+    
+    // Apply text search filter
+    if (q) {
+      messages = messages.filter((m) =>
+        [m.from, m.preview]
+          .filter(Boolean)
+          .some((field) => (field as string).toLowerCase().includes(q))
+      );
+    }
+    
+    // Apply existing filters
+    messages = messages.filter((m) => {
+      if (filterUnread && !m.unread) return false;
+      if (filterStarred && !m.starred) return false;
+      return true;
+    });
+    
+    return messages;
+  }, [query, filterUnread, filterStarred]);
 
   return (
-    <main className="mx-auto max-w-5xl px-3 py-6 sm:px-6">
-      {/* Title */}
-      <h1 className="mb-4 text-center text-lg font-semibold tracking-tight text-neutral-800 dark:text-neutral-100">
-        Inbox page view
-      </h1>
+    <section className="w-full flex flex-col items-center bg-black text-white min-h-screen">
+      <div className="mx-auto max-w-5xl px-3 py-6 sm:px-6">
 
-      {/* Top Icon Bar */}
-      <nav className="mb-6 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
-        <div className="flex flex-wrap items-center justify-between gap-1 sm:gap-2">
-          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-            <IconLink href="/" label="Home">
-              <IconHome className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-            </IconLink>
-            <IconLink href="/profilePage" label="Create Post">
-              <IconNewSection className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-            </IconLink>
-            <IconLink href="/SponsorPage" label="Sponsors">
-              <Image
-                src="/s.svg"
-                alt="Sponsors"
-                width={24}
-                height={24}
-                className="h-6 w-6 object-contain"
-                priority
-              />
-            </IconLink>
-            <IconLink href="/Inbox" label="Inbox">
-              <Image
-                src="/inbox-svgrepo-com.svg"
-                alt="Inbox"
-                width={24}
-                height={24}
-                className="h-6 w-6 object-contain"
-                priority
-              />
-            </IconLink>
-            <IconLink href="/profilePage" label="Profile">
-              <IconUser className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-            </IconLink>
-            <IconLink href="/feedPage" label="Feed">
-              <IconTerminal2 className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-            </IconLink>
+      {/* Title */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Inbox</h1>
+          </div>
+          <div>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search inbox..."
+              className="px-3 py-2 w-64 rounded-md border border-white bg-indigo-900 placeholder-gray-300"
+            />
           </div>
         </div>
-      </nav>
 
       {/* Inbox Shell */}
-      <section className="rounded-3xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+      <section className="rounded-3xl border border-purple-500 bg-indigo-900 shadow-sm">
         {/* Filters Row */}
-        <div className="flex items-center gap-4 border-b border-neutral-200 px-4 py-3 text-sm dark:border-neutral-700">
-          <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-200">
+        <div className="flex items-center gap-4 border-b border-purple-400 px-4 py-3 text-sm">
+          <div className="flex items-center gap-2 text-purple-200">
             <IconFilter className="h-4 w-4" />
             <span className="font-medium">Filters</span>
             <IconArrowRight className="h-4 w-4 opacity-60" />
@@ -164,8 +155,8 @@ export default function InboxPage() {
             onClick={() => setFilterUnread((v) => !v)}
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
               filterUnread
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                : "border-neutral-300 text-neutral-700 hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                ? "border-purple-400 bg-purple-600"
+                : "border-purple-400 text-purple-200 hover:bg-purple-800"
             }`}
             aria-pressed={filterUnread}
           >
@@ -177,8 +168,8 @@ export default function InboxPage() {
             onClick={() => setFilterStarred((v) => !v)}
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
               filterStarred
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                : "border-neutral-300 text-neutral-700 hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                ? "border-purple-400 bg-purple-600"
+                : "border-purple-400 text-purple-200 hover:bg-purple-800"
             }`}
             aria-pressed={filterStarred}
           >
@@ -189,7 +180,7 @@ export default function InboxPage() {
             <button
               type="button"
               onClick={() => router.push("/Inbox/compose")}
-              className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50 active:translate-y-[1px] dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+              className="inline-flex items-center gap-2 rounded-full border border-purple-400 bg-indigo-800 px-4 py-2 text-xs font-semibold text-purple-200 shadow-sm transition hover:bg-purple-800 active:translate-y-[1px]"
             >
               <IconPencil className="h-4 w-4" /> Compose
             </button>
@@ -197,13 +188,13 @@ export default function InboxPage() {
         </div>
 
         {/* Messages */}
-        <ul role="list" className="divide-y divide-neutral-200 dark:divide-neutral-700">
+        <ul role="list" className="divide-y divide-purple-400">
           {filtered.map((m) => (
             <li key={m.id}>
               <button
                 type="button"
                 onClick={() => router.push(`/Inbox/${m.id}`)}
-                className="group flex w-full items-center gap-4 px-4 py-5 text-left transition hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black dark:hover:bg-neutral-800 dark:focus-visible:ring-white"
+                className="group flex w-full items-center gap-4 px-4 py-5 text-left transition hover:bg-purple-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
                 aria-label={`Open conversation with ${m.from}`}
               >
                 <Avatar name={m.from} />
@@ -211,11 +202,11 @@ export default function InboxPage() {
                 <div className="flex min-w-0 flex-1 items-center gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      <p className="truncate text-sm font-medium">
                         {m.from}
                       </p>
                       {m.unread && (
-                        <span className="rounded-full bg-black px-2 py-0.5 text-[10px] font-semibold leading-4 text-white dark:bg-white dark:text-black">
+                        <span className="rounded-full bg-purple-600 px-2 py-0.5 text-[10px] font-semibold leading-4">
                           Unread
                         </span>
                       )}
@@ -223,12 +214,12 @@ export default function InboxPage() {
                         <IconStar className="h-4 w-4 fill-yellow-400 text-yellow-500" aria-hidden />
                       )}
                     </div>
-                    <p className="mt-1 line-clamp-1 text-sm text-neutral-600 dark:text-neutral-300">
+                    <p className="mt-1 line-clamp-1 text-sm text-purple-200">
                       {m.preview}
                     </p>
                   </div>
 
-                  <p className="whitespace-nowrap text-xs font-medium text-neutral-500 opacity-70 group-hover:opacity-100 dark:text-neutral-400">
+                  <p className="whitespace-nowrap text-xs font-medium text-purple-300 opacity-70 group-hover:opacity-100">
                     Click anywhere to respond
                   </p>
                 </div>
@@ -237,13 +228,18 @@ export default function InboxPage() {
           ))}
 
           {filtered.length === 0 && (
-            <li className="px-4 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+            <li className="px-4 py-12 text-center text-sm text-purple-300">
               No messages match your filters.
             </li>
           )}
         </ul>
       </section>
-    </main>
+      </div>
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2">
+        <FloatingDockDemo />
+      </div>
+
+    </section>
   );
 }
 

@@ -171,7 +171,7 @@ export default function SponsorPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 ">Sponsors</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 pl-4">Sponsors</h1>
             <p className="text-sm text-gray-300">
               Discover partners and organizations supporting our community.
             </p>

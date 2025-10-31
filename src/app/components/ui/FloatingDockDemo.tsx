@@ -58,7 +58,7 @@ export function FloatingDockDemo() {
           priority
         />
       ),
-      href: "/Inbox",
+      href: "/InboxPage",
       
     },
         {
