@@ -21,9 +21,13 @@ export function NavbarDemo() {
   });
 };
   const navItems = [
-    {
+       {
       name: "Home",
       link: "/",
+    },
+    {
+      name: "Features",
+      link: "/FeaturesPage",
     },
     {
       name: "Pricing",

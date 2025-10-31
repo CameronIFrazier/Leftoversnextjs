@@ -52,14 +52,8 @@ export function FloatingDockDemo() {
     {
       title: "Inbox",
       icon: (
-        <Image
-          src="/inbox-svgrepo-com.svg"            
-          alt="Inbox"
-          width={32}
-          height={32}
-          className="h-full w-full object-contain scale-125"
-          priority
-        />
+        <IconInbox className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+
       ),
       href: "/InboxPage",
       
