@@ -5,9 +5,9 @@ import { NavbarDemo } from "../components/ui/NavbarDemo";
 
 export default function ContactPage() {
   return (
-    <section className="min-h-screen bg-gradient-to-b from-neutral-900 to-black">
+    <section className="min-h-screen bg-black">
       <NavbarDemo />
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-900 to-black p-4">
+    <div className="min-h-screen flex items-center justify-center bg-black p-4">
       <Card className="w-full max-w-2xl p-8 space-y-8 bg-black/50 backdrop-blur-sm border-neutral-800">
         <div className="space-y-4">
           <h1 className="text-3xl font-bold text-white text-center">Contact Us</h1>
