@@ -28,7 +28,7 @@ export function FloatingDockDemo() {
       icon: (
         <IconNewSection className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-      href: "/profilePage",
+  href: "/ProfilePage",
     },
     {
       title: "Sponsors",
@@ -66,7 +66,7 @@ export function FloatingDockDemo() {
       icon: (
         <IconUser className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-      href: "/profilePage",
+  href: "/ProfilePage",
       
     },
     {
