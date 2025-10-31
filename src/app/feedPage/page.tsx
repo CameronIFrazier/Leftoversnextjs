@@ -131,6 +131,101 @@ function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
     </aside>
   );
 }
+
+// Top-level, memoized CommentItem to avoid remounting on parent renders.
+// It receives all handlers and lookup function as props to stay pure.
+const CommentItem = React.memo(function CommentItemComponent({
+  comment,
+  postId,
+  depth = 0,
+  getReplies,
+  replyingTo,
+  setReplyingTo,
+  replyInputs,
+  setReplyInputs,
+  handleReplySubmit,
+}: {
+  comment: Comment;
+  postId: number;
+  depth?: number;
+  getReplies: (parentId: number) => Comment[];
+  replyingTo: number | null;
+  setReplyingTo: (id: number | null) => void;
+  replyInputs: { [key: number]: string };
+  setReplyInputs: React.Dispatch<React.SetStateAction<{ [key: number]: string }>>;
+  handleReplySubmit: (postId: number, parentId: number) => Promise<void>;
+}) {
+  const children = getReplies(comment.id);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Auto-focus the reply input when it becomes visible
+  React.useEffect(() => {
+    if (replyingTo === comment.id && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [replyingTo, comment.id]);
+
+  return (
+    <div className={`bg-indigo-${800 - Math.min(depth * 50, 400)} rounded-lg p-2 mb-2`}>
+      <div className="flex items-start gap-3">
+        {comment.avatar ? (
+          <img
+            src={comment.avatar}
+            alt={`${comment.username || "user"} avatar`}
+            className={depth > 0 ? "w-6 h-6 rounded-full object-cover" : "w-8 h-8 rounded-full object-cover"}
+          />
+        ) : (
+          <div
+            className={
+              depth > 0
+                ? "w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs"
+                : "w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm"
+            }
+          >
+            @
+          </div>
+        )}
+
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-semibold text-gray-100">{comment.username ? `@${comment.username}` : "Unknown"}</div>
+            {comment.created_at && <div className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString()}</div>}
+          </div>
+
+          <div className="mt-1 text-white">{comment.comment_text}</div>
+
+          <button type="button" onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)} className="text-sm text-blue-400 hover:text-blue-300 mt-1">
+            Reply
+          </button>
+
+          {replyingTo === comment.id && (
+            <div className="mt-2 flex gap-2 items-center">
+              <input
+                ref={inputRef}
+                type="text"
+                value={replyInputs[comment.id] || ""}
+                onChange={(e) => setReplyInputs((prev) => ({ ...prev, [comment.id]: e.target.value }))}
+                placeholder="Write a reply..."
+                className="flex-grow rounded-lg p-2 text-black"
+              />
+              <button type="button" onClick={() => handleReplySubmit(postId, comment.id)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">
+                Send
+              </button>
+            </div>
+          )}
+
+          {children.length > 0 && (
+            <div className="ml-5 mt-2 space-y-1">
+              {children.map((child) => (
+                <CommentItem key={child.id} comment={child} postId={postId} depth={depth + 1} getReplies={getReplies} replyingTo={replyingTo} setReplyingTo={setReplyingTo} replyInputs={replyInputs} setReplyInputs={setReplyInputs} handleReplySubmit={handleReplySubmit} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -271,6 +366,8 @@ export default function Home() {
   const getReplies = (parentId: number) =>
     comments.filter((c) => c.parent_comment_id === parentId);
 
+  
+
   return (
     <div className="h-full w-full flex justify-center bg-black text-white p-6">
       {/**Left Side content */}
@@ -314,87 +411,18 @@ export default function Home() {
                 {getTopLevelComments(post.id).length === 0 ? (
                   <p className="text-gray-300 text-sm">No comments yet.</p>
                 ) : (
-                  getTopLevelComments(post.id).map((comment) => (
-                    <div key={comment.id} className="bg-indigo-800 rounded-lg p-2 mb-2">
-                      <div className="flex items-start gap-3">
-                        {comment.avatar ? (
-                          <img src={comment.avatar} alt={`${comment.username || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
-                        )}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="text-sm font-semibold text-gray-100">{comment.username ? `@${comment.username}` : 'Unknown'}</div>
-                            {comment.created_at && (
-                              <div className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString()}</div>
-                            )}
-                          </div>
-                          <div className="mt-1 text-white">{comment.comment_text}</div>
-
-                          {/* Reply button */}
-                          <button
-                            onClick={() =>
-                              setReplyingTo(replyingTo === comment.id ? null : comment.id)
-                            }
-                            className="text-sm text-blue-400 hover:text-blue-300 mt-1"
-                          >
-                            Reply
-                          </button>
-
-                          {/* Reply input */}
-                          {replyingTo === comment.id && (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                handleReplySubmit(post.id, comment.id);
-                              }}
-                              className="mt-2 flex gap-2 items-center"
-                            >
-                              <input
-                                type="text"
-                                value={replyInputs[comment.id] || ""}
-                                onChange={(e) =>
-                                  setReplyInputs((prev) => ({
-                                    ...prev,
-                                    [comment.id]: e.target.value,
-                                  }))
-                                }
-                                placeholder="Write a reply..."
-                                className="flex-grow rounded-lg p-2 text-black"
-                              />
-                              <button
-                                type="submit"
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
-                              >
-                                Send
-                              </button>
-                            </form>
-                          )}
-
-                          {/* Replies */}
-                          <div className="ml-5 mt-2 space-y-1">
-                            {getReplies(comment.id).map((reply) => (
-                              <div
-                                key={reply.id}
-                                className="bg-indigo-700 rounded-lg p-2 text-sm"
-                              >
-                                <div className="flex items-start gap-2">
-                                  {reply.avatar ? (
-                                    <img src={reply.avatar} alt={`${reply.username || 'user'} avatar`} className="w-6 h-6 rounded-full object-cover" />
-                                  ) : (
-                                    <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">@</div>
-                                  )}
-                                  <div>
-                                    <div className="text-sm font-semibold">{reply.username ? `@${reply.username}` : 'Unknown'}</div>
-                                    <div className="text-xs text-gray-300">{reply.comment_text}</div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  getTopLevelComments(post.id).map((c) => (
+                    <CommentItem
+                      key={c.id}
+                      comment={c}
+                      postId={post.id}
+                      getReplies={getReplies}
+                      replyingTo={replyingTo}
+                      setReplyingTo={setReplyingTo}
+                      replyInputs={replyInputs}
+                      setReplyInputs={setReplyInputs}
+                      handleReplySubmit={handleReplySubmit}
+                    />
                   ))
                 )}
 
