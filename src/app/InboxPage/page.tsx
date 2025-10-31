@@ -234,11 +234,10 @@ export default function InboxPage() {
           )}
         </ul>
       </section>
-      </div>
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2">
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2">
         <FloatingDockDemo />
       </div>
-
+      </div>
     </section>
   );
 }
