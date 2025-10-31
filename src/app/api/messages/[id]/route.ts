@@ -23,14 +23,21 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
   // Try to fetch from MySQL if env is configured
   try {
-    if (!process.env.MYSQL_HOST || !process.env.MYSQL_USER) throw new Error('DB env not configured');
+    if (!process.env.MYSQL_HOST || !process.env.MYSQL_USER) {
+      console.error('Database environment variables are not configured');
+      throw new Error('DB env not configured');
+    }
 
+    console.log('Attempting database connection...');
     const connection = await mysql.createConnection({
       host: process.env.MYSQL_HOST,
       user: process.env.MYSQL_USER,
       password: process.env.MYSQL_PASSWORD,
       database: process.env.MYSQL_DATABASE,
       port: Number(process.env.MYSQL_PORT || 3306),
+    }).catch(err => {
+      console.error('Database connection error:', err);
+      throw err;
     });
 
     const [rows] = await connection.query<RowDataPacket[] & MessageRow[]>(
