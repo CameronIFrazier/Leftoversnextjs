@@ -330,11 +330,23 @@ export default function ProfilePage() {
               className="w-full p-2 mb-2 rounded bg-indigo-900"
               rows={4}
             />
+            
             <input
               type="file"
+              id="post-media-upload"
+              className="hidden"
               onChange={(e) => e.target.files && setMedia(e.target.files[0])}
-              className="mb-3"
             />
+            
+            {/* Upload Media Button */}
+            <button
+              onClick={() => document.getElementById('post-media-upload')?.click()}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
+            >
+              <IconPhoto className="h-5 w-5" />
+              {media ? `Selected: ${media.name}` : 'Upload Media'}
+            </button>
+            
             <button
               onClick={handleCreatePost}
               className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
@@ -350,7 +362,7 @@ export default function ProfilePage() {
             <h1 className="text-2xl font-bold mb-4 text-white-300">Posts History</h1>
             <div className="w-full flex flex-col gap-4">
               {posts.length === 0 ? (
-                <p>No posts yet.</p>
+                <LoadingDots />
               ) : (
                 posts.map((post) => (
                   <div
