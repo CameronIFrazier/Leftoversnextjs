@@ -34,7 +34,7 @@ export function FloatingDockDemo() {
       title: "Sponsors",
       icon: (
         <Image
-          src="/s.svg"            // file at /public/s.svg
+          src="/s.svg"           
           alt="Sponsors"
           width={32}
           height={32}
@@ -43,6 +43,22 @@ export function FloatingDockDemo() {
         />
       ),
       href: "/SponsorPage",
+      
+    },
+    
+    {
+      title: "Inbox",
+      icon: (
+        <Image
+          src="/inbox-svgrepo-com.svg"            
+          alt="Inbox"
+          width={32}
+          height={32}
+          className="h-full w-full object-contain scale-125"
+          priority
+        />
+      ),
+      href: "/Inbox",
       
     },
         {
