@@ -3,6 +3,7 @@ import React, { useState, useEffect, use } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 import LoadingDots from "../components/ui/LoadingDots";
 import GradientBorder from "../components/ui/GradientBorder";
+import { IconEdit } from "@tabler/icons-react";
 interface Post {
   id: number;
   title: string;
@@ -19,7 +20,42 @@ export default function ProfilePage() {
   const [title, setTitle] = useState(""); // 🔹 NEW — new post title
   const [description, setDescription] = useState(""); // 🔹 NEW — new post desc
   const [media, setMedia] = useState<File | null>(null); // 🔹 NEW — new post file
-const [userId, setUserId] = useState<number | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false); // 🔹 NEW — edit mode state
+  const [toastMessage, setToastMessage] = useState<string | null>(null); // 🔹 NEW — toast notification
+  const [toastVisible, setToastVisible] = useState(false); // 🔹 NEW — toast visibility for fade animation
+
+  useEffect(() => {
+    // Add click outside listener to turn off edit mode
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      // Check if click is outside the profile section
+      if (!target.closest('.profile-section')) {
+        setIsEditMode(false);
+      }
+    };
+
+    if (isEditMode) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isEditMode]);
+
+  // Show toast notification for 5 seconds
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setToastVisible(true);
+    setTimeout(() => {
+      setToastVisible(false);
+      // Remove the message after fade animation completes
+      setTimeout(() => {
+        setToastMessage(null);
+      }, 500); // 500ms matches the transition duration
+    }, 3000); // Start fading 300ms before the 5 second mark
+  };
 
   useEffect(() => {
     async function fetchUserData() {
@@ -87,12 +123,40 @@ const [userId, setUserId] = useState<number | null>(null);
 
       const data = await res.json();
       if (data.success) {
-        alert("Bio updated!");
+        showToast("Bio updated!");
+        setIsEditMode(false); // Exit edit mode after successful save
       } else {
         console.error("Failed to update bio:", data.error);
       }
     } catch (err) {
       console.error("Failed to save bio:", err);
+    }
+  };
+
+  // Remove avatar
+  const removeAvatar = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("/api/updatePfp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ removeAvatar: true }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast("Avatar removed!");
+        setProfilePic(null);
+      } else {
+        console.error("Failed to remove avatar:", data.error);
+      }
+    } catch (err) {
+      console.error("Failed to remove avatar:", err);
     }
   };
 
@@ -139,18 +203,28 @@ const [userId, setUserId] = useState<number | null>(null);
 
   return (
     <section className="w-full flex flex-col items-center bg-black text-white">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed top-4 right-4 bg-purple-400 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 ease-in-out transform ${
+          toastVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        }`}>
+          {toastMessage}
+        </div>
+      )}
+      
       <section className="w-[98%] flex flex-row items-start justify-center pb-5 pt-5">
         {/* Left side */}
         <section className="w-[60%] h-auto pr-5">
           {/* Profile box */}
-          <section className="w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white rounded-lg bg-black-300">
+          <section className="profile-section w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white rounded-lg bg-black-300">
             {userName ? (
-              <h2 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 mb-2 pl-4 pr-4">
+              <h2 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 mb-4 pl-4 pr-4">
                 Welcome back, {userName} 
               </h2>
             ) : (
-              <p>Loading username...</p>
+              <p className="mb-4">Loading username...</p>
             )}
+            
             {profilePic ? (
               <img
                 src={profilePic}
@@ -160,50 +234,87 @@ const [userId, setUserId] = useState<number | null>(null);
             ) : (
               <LoadingDots />
             )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
 
-                const formData = new FormData();
-                formData.append("pfp", file);
-
-                const token = localStorage.getItem("token");
-                if (!token) return;
-
-                fetch("/api/updatePfp", {
-                  method: "POST",
-                  headers: { Authorization: `Bearer ${token}` },
-                  body: formData,
-                })
-                  .then((res) => res.json())
-                  .then((data) => {
-                    if (data.success) {
-                      alert("Profile picture updated!");
-                      setProfilePic(data.url);
-                    } else {
-                      console.error("Failed to update pfp:", data.error);
-                    }
-                  })
-                  .catch((err) => console.error("Upload error:", err));
-              }}
-            />
-
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Write your bio..."
-              className="w-full p-2 rounded-lg text-white bg-indigo-900"
-              rows={5}
-            />
+            {/* Edit button under avatar */}
             <button
-              onClick={saveBio}
-              className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white"
+              onClick={() => setIsEditMode(!isEditMode)}
+              className={`mb-4 p-2 rounded-full transition-colors ${
+                isEditMode 
+                  ? 'bg-purple-600 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-purple-600 hover:text-white'
+              }`}
+              title={isEditMode ? "Exit edit mode" : "Edit profile"}
             >
-              Save Bio
+              <IconEdit className="h-5 w-5" />
             </button>
+            
+            {/* Profile picture upload - only show in edit mode */}
+            {isEditMode && (
+              <div className="flex flex-col items-center gap-2 mb-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="mb-2"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    const formData = new FormData();
+                    formData.append("pfp", file);
+
+                    const token = localStorage.getItem("token");
+                    if (!token) return;
+
+                    fetch("/api/updatePfp", {
+                      method: "POST",
+                      headers: { Authorization: `Bearer ${token}` },
+                      body: formData,
+                    })
+                      .then((res) => res.json())
+                      .then((data) => {
+                        if (data.success) {
+                          showToast("Profile picture updated!");
+                          setProfilePic(data.url);
+                        } else {
+                          console.error("Failed to update pfp:", data.error);
+                        }
+                      })
+                      .catch((err) => console.error("Upload error:", err));
+                  }}
+                />
+                {profilePic && (
+                  <button
+                    onClick={removeAvatar}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors"
+                  >
+                    Remove Avatar
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Bio section */}
+            {isEditMode ? (
+              <>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Write your bio..."
+                  className="w-full p-2 rounded-lg text-white bg-indigo-900"
+                  rows={5}
+                />
+                <button
+                  onClick={saveBio}
+                  className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white"
+                >
+                  Save Bio
+                </button>
+              </>
+            ) : (
+              <div className="w-full p-2 rounded-lg text-white bg-indigo-900/50 min-h-[100px] flex items-center justify-center">
+                {bio || "No bio yet. Click the edit button to add one!"}
+              </div>
+            )}
           </section>
 
           {/* 🔹 Post Creation Section */}
