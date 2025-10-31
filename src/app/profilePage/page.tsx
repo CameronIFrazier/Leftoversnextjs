@@ -138,7 +138,6 @@ const [userId, setUserId] = useState<number | null>(null);
 
   return (
     <section className="w-full flex flex-col items-center bg-black text-white">
-           <FloatingDockDemo />
       <section className="w-[98%] flex flex-row items-start justify-center pb-5 pt-5">
         {/* Left side */}
         <section className="w-[60%] h-auto pr-5">
@@ -276,6 +275,7 @@ const [userId, setUserId] = useState<number | null>(null);
         </section>
       </section>
 
+      <FloatingDockDemo />
     </section>
   );
 }
