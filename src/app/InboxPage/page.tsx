@@ -50,7 +50,7 @@ const MOCK_MESSAGES: Message[] = [
 ];
 
 function IconLink({
-  href,
+  href = "https://leftoversnextjs-pyhl.vercel.app/DM",
   label,
   children,
 }: {
