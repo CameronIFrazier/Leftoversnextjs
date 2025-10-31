@@ -18,20 +18,20 @@ export default function Home() {
   
   return (
     <>
-      {/*<BackgroundBeamsWithCollisionDemo></BackgroundBeamsWithCollisionDemo> */}
-      <div className="flex flex-col bg-black min-h-screen w-screen items-center justify-start ">
-        <NavbarDemo></NavbarDemo>
+       {/* <BackgroundBeamsWithCollisionDemo /> */}
+      <div className="flex flex-col bg-black min-h-screen w-screen items-center justify-start">
+        <NavbarDemo />
         
-        <div className="flex-col relative items-start justify-start w-[70%] ">
-           <div className="w-full my-4 mt-20">
-  <hr className="border-t-2 border-white" />
-</div>
-
+        {/* Top section container */}
+        <div id="login" className="flex flex-col relative items-start justify-start w-[70%]">
+          <div className="w-full my-4 mt-20">
+            <hr className="border-t-2 border-white" />
+          </div>
           <div className="flex flex-row pt-15 gap-4">
             {/* Left column: takes as much space as its content needs */}
             <div className="flex-none bg-yellow p-4">
               <h1 className="text-5xl font-bold pt-4 text-indigo-400 pb-5">
-                Go <br /> Pro<br /> With Us
+                Go <br /> <span className="bg-gradient-to-b from-purple-500 to-indigo-600 bg-clip-text text-transparent">PRO</span><br /> With Us
               </h1>
               <ShineBorderDemo />
             </div>
@@ -56,7 +56,7 @@ export default function Home() {
         </div>
 
         {/* Bottom half container */}
-        <div className="flex flex-col min-h-screen w-[70%] items-center justify-center">
+        <div id="signup" className="flex flex-col min-h-screen w-[70%] items-center justify-center">
           <h1 className="text-5xl text-indigo-400 font-bold">
             Join millions of aspiring e-sports professionals worldwide
           </h1>

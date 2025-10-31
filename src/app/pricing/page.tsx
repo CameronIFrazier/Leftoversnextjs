@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { NavbarDemo } from "../components/ui/NavbarDemo";
 
 type PricingTier = {
   name: string;
@@ -54,9 +55,9 @@ const PRICING_TIERS: PricingTier[] = [
 function PricingCard({ tier }: { tier: PricingTier }) {
   return (
     <div
-      className={`rounded-xl p-6 ${
+      className={`rounded-4xl p-6 ${
         tier.highlighted
-          ? "border-2 border-indigo-500 bg-indigo-950/30"
+          ? "border-5 border-indigo-400 bg-indigo-950/30"
           : "border border-white/20 bg-black/40"
       }`}
     >
@@ -70,7 +71,7 @@ function PricingCard({ tier }: { tier: PricingTier }) {
         {tier.features.map((feature, index) => (
           <li key={index} className="flex items-center text-sm text-gray-300">
             <svg
-              className="w-5 h-5 text-indigo-500 mr-2"
+              className="w-5 h-5 text-green-500 mr-2"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -103,6 +104,8 @@ function PricingCard({ tier }: { tier: PricingTier }) {
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-black text-white">
+      <NavbarDemo />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
