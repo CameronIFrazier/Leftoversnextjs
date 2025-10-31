@@ -3,7 +3,7 @@ import React, { useState, useEffect, use } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 import LoadingDots from "../components/ui/LoadingDots";
 import GradientBorder from "../components/ui/GradientBorder";
-import { IconEdit } from "@tabler/icons-react";
+import { IconEdit, IconPhoto, IconTrash } from "@tabler/icons-react";
 interface Post {
   id: number;
   title: string;
@@ -29,10 +29,16 @@ export default function ProfilePage() {
     // Add click outside listener to turn off edit mode
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      // Check if click is outside the profile section
-      if (!target.closest('.profile-section')) {
-        setIsEditMode(false);
+      
+      // Don't exit edit mode if clicking on buttons or textarea
+      if (target.closest('button') || 
+          target.closest('textarea') || 
+          target.closest('input[type="file"]')) {
+        return;
       }
+      
+      // Exit edit mode for any other clicks
+      setIsEditMode(false);
     };
 
     if (isEditMode) {
@@ -133,33 +139,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Remove avatar
-  const removeAvatar = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const res = await fetch("/api/updatePfp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ removeAvatar: true }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        showToast("Avatar removed!");
-        setProfilePic(null);
-      } else {
-        console.error("Failed to remove avatar:", data.error);
-      }
-    } catch (err) {
-      console.error("Failed to remove avatar:", err);
-    }
-  };
-
   // 🔹 Create new post
   const handleCreatePost = async () => {
     const token = localStorage.getItem("token");
@@ -216,7 +195,7 @@ export default function ProfilePage() {
         {/* Left side */}
         <section className="w-[60%] h-auto pr-5">
           {/* Profile box */}
-          <section className="profile-section w-full h-[400px] bg-cover bg-center flex flex-col p-4 items-center justify-center text-white rounded-lg bg-black-300">
+          <section className="profile-section w-full min-h-[400px] bg-cover bg-center flex flex-col p-4 items-center text-white rounded-lg bg-black-300">
             {userName ? (
               <h2 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 mb-4 pl-4 pr-4">
                 Welcome back, {userName} 
@@ -232,7 +211,9 @@ export default function ProfilePage() {
                 className="w-32 h-32 rounded-full mb-4"
               />
             ) : (
-              <LoadingDots />
+              <div className="mb-4">
+                <LoadingDots />
+              </div>
             )}
 
             {/* Edit button under avatar */}
@@ -251,10 +232,12 @@ export default function ProfilePage() {
             {/* Profile picture upload - only show in edit mode */}
             {isEditMode && (
               <div className="flex flex-col items-center gap-2 mb-4">
+                {/* Hidden file input */}
                 <input
                   type="file"
                   accept="image/*"
-                  className="mb-2"
+                  className="hidden"
+                  id="avatar-upload"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
@@ -282,14 +265,28 @@ export default function ProfilePage() {
                       .catch((err) => console.error("Upload error:", err));
                   }}
                 />
-                {profilePic && (
+                
+                {/* Avatar Action Buttons */}
+                <div className="flex items-center gap-3">
+                  {/* Upload Avatar Button */}
                   <button
-                    onClick={removeAvatar}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors"
+                    onClick={() => document.getElementById('avatar-upload')?.click()}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                   >
-                    Remove Avatar
+                    <IconPhoto className="h-5 w-5" />
+                    Upload
                   </button>
-                )}
+                  
+                  {/* Delete Avatar Button */}
+                  {profilePic && (
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                    >
+                      <IconTrash className="h-5 w-5" />
+                      Delete
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
