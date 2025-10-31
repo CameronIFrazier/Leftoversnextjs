@@ -10,10 +10,9 @@ export async function GET() {
       port: Number(process.env.MYSQL_PORT),
     });
 
-    // Try to include username and avatar (profile_pic) for each comment by joining users.
-    // Some databases may not have a `username` column on comments yet; if so, fall back
-    // to a simpler select to avoid crashing.
-    let rows: any;
+   
+  // Use `unknown` to avoid `any` while still accepting the driver's return type.
+  let rows: unknown;
     try {
       [rows] = await connection.execute(
         `SELECT c.id, c.post_id, c.comment_text, c.parent_comment_id, c.created_at, c.username,
@@ -27,7 +26,8 @@ export async function GET() {
       const [fallbackRows] = await connection.execute(
         `SELECT id, post_id, comment_text, parent_comment_id, created_at FROM comments ORDER BY created_at ASC`
       );
-      rows = fallbackRows;
+  // fallbackRows may be RowDataPacket[]; keep as unknown for caller to serialize
+  rows = fallbackRows as unknown;
     }
 
     await connection.end();

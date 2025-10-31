@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
             // rows may be RowDataPacket[]; guard access
             if (Array.isArray(rows) && rows.length > 0) {
-              // @ts-ignore
+              // @ts-expect-error — rows type comes from mysql driver, we're asserting the shape
               username = rows[0].userName || null;
             }
           }

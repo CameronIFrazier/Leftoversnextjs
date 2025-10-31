@@ -35,15 +35,16 @@ export default function Home() {
       const res = await fetch("/api/getFeed");
       const data = await res.json();
       // Normalize incoming post objects to ensure we have a `username` and `avatar` field
-      const normalized = (data || []).map((p: any) => ({
-        id: p.id,
-        title: p.title,
-        description: p.description,
-        media_url: p.media_url ?? p.mediaUrl ?? null,
-        created_at: p.created_at ?? p.createdAt ?? null,
-        username: p.username ?? p.userName ?? p.user_name ?? p.name ?? null,
-        avatar: p.avatar ?? p.profile_pic ?? p.profilePic ?? null,
-      }));
+      const normalized = (data || []).map((p: Record<string, unknown>) => {
+        const id = typeof p["id"] === "number" ? (p["id"] as number) : Number(p["id"]);
+        const title = p["title"] ? String(p["title"]) : "";
+        const description = p["description"] ? String(p["description"]) : "";
+        const media_url = (p["media_url"] ?? p["mediaUrl"] ?? null) as string | null;
+        const created_at = (p["created_at"] ?? p["createdAt"] ?? null) as string | null;
+        const username = (p["username"] ?? p["userName"] ?? p["user_name"] ?? p["name"] ?? null) as string | null;
+        const avatar = (p["avatar"] ?? p["profile_pic"] ?? p["profilePic"] ?? null) as string | null;
+        return { id, title, description, media_url, created_at, username, avatar };
+      });
 
       setPosts(normalized);
     }
@@ -74,15 +75,16 @@ export default function Home() {
       const res = await fetch("/api/getComments");
       const data = await res.json();
       // Normalize comments to ensure username/avatar fields exist
-      const normalized = (data || []).map((c: any) => ({
-        id: c.id,
-        post_id: c.post_id,
-        comment_text: c.comment_text,
-        parent_comment_id: c.parent_comment_id ?? c.parent_comment_id,
-        created_at: c.created_at ?? c.createdAt ?? null,
-        username: c.username ?? c.userName ?? null,
-        avatar: c.avatar ?? c.profile_pic ?? c.profilePic ?? null,
-      }));
+      const normalized = (data || []).map((c: Record<string, unknown>) => {
+        const id = typeof c["id"] === "number" ? (c["id"] as number) : Number(c["id"]);
+        const post_id = typeof c["post_id"] === "number" ? (c["post_id"] as number) : Number(c["post_id"]);
+        const comment_text = c["comment_text"] ? String(c["comment_text"]) : "";
+        const parent_comment_id = c["parent_comment_id"] ?? c["parentCommentId"] ?? null;
+        const created_at = (c["created_at"] ?? c["createdAt"] ?? null) as string | null;
+        const username = (c["username"] ?? c["userName"] ?? null) as string | null;
+        const avatar = (c["avatar"] ?? c["profile_pic"] ?? c["profilePic"] ?? null) as string | null;
+        return { id, post_id, comment_text, parent_comment_id, created_at, username, avatar };
+      });
 
       setComments(normalized);
     }
@@ -121,15 +123,16 @@ export default function Home() {
 
       // Reload comments and normalize them
       const fetched = await (await fetch("/api/getComments")).json();
-      const normalized = (fetched || []).map((c: any) => ({
-        id: c.id,
-        post_id: c.post_id,
-        comment_text: c.comment_text,
-        parent_comment_id: c.parent_comment_id ?? c.parent_comment_id,
-        created_at: c.created_at ?? c.createdAt ?? null,
-        username: c.username ?? c.userName ?? null,
-        avatar: c.avatar ?? c.profile_pic ?? c.profilePic ?? null,
-      }));
+      const normalized = (fetched || []).map((c: Record<string, unknown>) => {
+        const id = typeof c["id"] === "number" ? (c["id"] as number) : Number(c["id"]);
+        const post_id = typeof c["post_id"] === "number" ? (c["post_id"] as number) : Number(c["post_id"]);
+        const comment_text = c["comment_text"] ? String(c["comment_text"]) : "";
+        const parent_comment_id = c["parent_comment_id"] ?? c["parentCommentId"] ?? null;
+        const created_at = (c["created_at"] ?? c["createdAt"] ?? null) as string | null;
+        const username = (c["username"] ?? c["userName"] ?? null) as string | null;
+        const avatar = (c["avatar"] ?? c["profile_pic"] ?? c["profilePic"] ?? null) as string | null;
+        return { id, post_id, comment_text, parent_comment_id, created_at, username, avatar };
+      });
       setComments(normalized);
     } catch (err) {
       console.error("Failed to add comment:", err);
