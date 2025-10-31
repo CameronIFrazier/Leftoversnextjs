@@ -21,8 +21,15 @@ export async function POST(req: Request) {
         const msgBody = message?.body ?? message;
 
         await connection.query(
-          'INSERT INTO messages (conversation_id, sender, body, created_at) VALUES (?, ?, ?, NOW())',
-          [conversationId, sender, msgBody]
+          'INSERT INTO messages (conversation_id, sender, body, media_type, media_url, media_filename, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+          [
+            conversationId,
+            sender,
+            msgBody,
+            message?.media?.type || null,
+            message?.media?.url || null,
+            message?.media?.filename || null
+          ]
         );
 
         await connection.end();

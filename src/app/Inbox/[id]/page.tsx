@@ -8,6 +8,11 @@ type ThreadMessage = {
   from: string;
   body: string;
   time?: string;
+  media?: {
+    type: 'image' | 'video' | 'file';
+    url: string;
+    filename: string;
+  };
 };
 
 // Example threads keyed by conversation id. In a real app this would be loaded from the server.
@@ -51,6 +56,9 @@ export default function ConversationPage({ params }: { params: any }) {
   }
   const [thread, setThread] = useState<ThreadMessage[]>([]);
   const [text, setText] = useState("");
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -85,12 +93,69 @@ export default function ConversationPage({ params }: { params: any }) {
     return PARTICIPANTS[id] ?? undefined;
   })();
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setMediaFile(file);
+    }
+  };
+
+  const uploadMedia = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!res.ok) throw new Error('Upload failed');
+      
+      const data = await res.json();
+      return data.url;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const send = async () => {
-    if (!text.trim()) return;
-    // append locally and post to API stub
-    const newMsg: ThreadMessage = { id: Date.now().toString(), from: "You", body: text.trim(), time: "now" };
+    if (!text.trim() && !mediaFile) return;
+    
+    let mediaData;
+    if (mediaFile) {
+      try {
+        const url = await uploadMedia(mediaFile);
+        const type = mediaFile.type.startsWith('image/') ? 'image' as const : 
+                    mediaFile.type.startsWith('video/') ? 'video' as const : 
+                    'file' as const;
+        mediaData = {
+          type,
+          url,
+          filename: mediaFile.name
+        };
+      } catch (err) {
+        console.error('Failed to upload media:', err);
+        alert('Failed to upload media. Please try again.');
+        return;
+      }
+    }
+
+    const newMsg: ThreadMessage = { 
+      id: Date.now().toString(), 
+      from: "You", 
+      body: text.trim(), 
+      time: "now",
+      ...(mediaData && { media: mediaData })
+    };
+
     setThread((t) => [...t, newMsg]);
     setText("");
+    setMediaFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
 
     try {
       await fetch("/api/messages", {
@@ -113,16 +178,95 @@ export default function ConversationPage({ params }: { params: any }) {
           {thread.map((m) => (
             <div key={m.id} className={`p-3 rounded-md ${m.from === 'You' ? 'bg-purple-800 self-end' : 'bg-indigo-900'}`}>
               <div className="text-sm font-semibold text-purple-200">{m.from}</div>
-              <div className="mt-1 text-sm text-purple-100">{m.body}</div>
+              {m.body && <div className="mt-1 text-sm text-purple-100">{m.body}</div>}
+              {m.media && (
+                <div className="mt-2">
+                  {m.media.type === 'image' && (
+                    <img 
+                      src={m.media.url} 
+                      alt={m.media.filename}
+                      className="max-w-sm rounded-md"
+                    />
+                  )}
+                  {m.media.type === 'video' && (
+                    <video 
+                      src={m.media.url}
+                      controls
+                      className="max-w-sm rounded-md"
+                    />
+                  )}
+                  {m.media.type === 'file' && (
+                    <a 
+                      href={m.media.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2 bg-indigo-800/50 rounded-md hover:bg-indigo-700/50 transition-colors"
+                    >
+                      📎 {m.media.filename}
+                    </a>
+                  )}
+                </div>
+              )}
               <div className="text-xs text-purple-400 mt-1">{m.time}</div>
             </div>
           ))}
         </div>
 
         <div className="fixed bottom-4 left-0 right-0 bg-black/80 p-4 border-t border-purple-600">
-          <div className="max-w-3xl mx-auto flex gap-2">
-            <textarea value={text} onChange={(e) => setText(e.target.value)} className="flex-1 rounded-md p-2 bg-indigo-900 text-white" rows={2} />
-            <button onClick={send} className="px-4 py-2 bg-purple-600 rounded-md">Send</button>
+          <div className="max-w-3xl mx-auto space-y-2">
+            {mediaFile && (
+              <div className="flex items-center gap-2 p-2 bg-indigo-900/50 rounded-md">
+                <div className="flex-1 truncate text-sm">
+                  {mediaFile.name}
+                </div>
+                <button 
+                  onClick={() => {
+                    setMediaFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                  className="text-purple-300 hover:text-purple-100"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              <div className="flex-1 flex gap-2">
+                <textarea 
+                  value={text} 
+                  onChange={(e) => setText(e.target.value)} 
+                  className="flex-1 rounded-md p-2 bg-indigo-900 text-white" 
+                  rows={2}
+                  placeholder="Type your message..."
+                />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept="image/*,video/*,.pdf,.doc,.docx"
+                />
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-2 bg-indigo-800 rounded-md hover:bg-indigo-700 transition-colors"
+                  title="Attach file"
+                >
+                  📎
+                </button>
+              </div>
+              <button 
+                onClick={send} 
+                disabled={isUploading || (!text.trim() && !mediaFile)} 
+                className={`px-4 py-2 bg-purple-600 rounded-md transition-colors ${
+                  isUploading || (!text.trim() && !mediaFile) 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:bg-purple-500'
+                }`}
+              >
+                {isUploading ? 'Uploading...' : 'Send'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
