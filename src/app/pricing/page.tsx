@@ -129,7 +129,7 @@ export default function PricingPage() {
             plans.
           </p>
           <button className="bg-white/10 text-white px-8 py-3 rounded-lg hover:bg-white/20 transition-all">
-            Contact Support
+            <a href="/contact">Contact Support</a>
           </button>
         </div>
       </div>
