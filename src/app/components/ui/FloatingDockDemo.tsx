@@ -54,7 +54,7 @@ export function FloatingDockDemo() {
           alt="Inbox"
           width={32}
           height={32}
-          className="h-full w-full object-contain"
+          className="h-full w-full object-contain scale-125"
           priority
         />
       ),
