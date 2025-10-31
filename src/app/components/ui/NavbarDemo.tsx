@@ -22,8 +22,8 @@ export function NavbarDemo() {
 };
   const navItems = [
     {
-      name: "Features",
-      link: "#features",
+      name: "Home",
+      link: "/",
     },
     {
       name: "Pricing",
@@ -32,10 +32,6 @@ export function NavbarDemo() {
     {
       name: "Contact",
       link: "/contact",
-    },
-    {
-      name: "Sponsors",
-      link: "/SponsorPage",
     },
   ];
 
@@ -50,8 +46,8 @@ export function NavbarDemo() {
           <NavbarLogo />
           <NavItems items={navItems} />
           <div className="flex items-center gap-4 pb">
-            <NavbarButton variant="secondary">Login</NavbarButton>
-            <NavbarButton variant="primary" onClick={scrollToBottom}>Sign Up</NavbarButton>
+            <NavbarButton variant="secondary" href="/#login">Login</NavbarButton>
+            <NavbarButton variant="primary" href="/#signup">Sign Up</NavbarButton>
           </div>
         </NavBody>
 
@@ -74,13 +70,14 @@ export function NavbarDemo() {
                 key={`mobile-link-${idx}`}
                 href={item.link}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="relative text-neutral-600 dark:text-neutral-300"
+                className="relative text-white font-bold"
               >
                 <span className="block">{item.name}</span>
               </a>
             ))}
             <div className="flex w-full flex-col gap-4">
               <NavbarButton
+                href="/#login"
                 onClick={() => setIsMobileMenuOpen(false)}
                 variant="primary"
                 className="w-full"
@@ -88,11 +85,12 @@ export function NavbarDemo() {
                 Login
               </NavbarButton>
               <NavbarButton
+                href="/#signup"
                 onClick={() => setIsMobileMenuOpen(false)}
                 variant="primary"
                 className="w-full"
               >
-                Book a call
+                Sign Up
               </NavbarButton>
             </div>
           </MobileNavMenu>
