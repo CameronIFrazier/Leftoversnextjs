@@ -29,9 +29,9 @@ const PARTICIPANTS: Record<string, string> = {
   "3": "Samir Patel",
 };
 
-export default function ConversationPage({ params }: { params?: Record<string, string> | Promise<Record<string, string>> }) {
-  // Server-rendered static mock: just read params synchronously
-  const id = (params as Record<string, string> | undefined)?.id ?? "1";
+export default function ConversationPage() {
+  // Non-dynamic static mock page (no params expected at /DM)
+  const id = "1";
   const thread = THREADS[id] ?? [];
 
   return (
