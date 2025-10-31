@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 
 interface Post {
@@ -11,7 +11,18 @@ interface Post {
   media_url?: string | null;
   created_at?: string;
 }
-
+export type Sponsor = {
+  id: string;
+  name: string;
+  description: string;
+  logoUrl?: string;
+  href?: string;
+};
+export type User = {
+  name: string;
+  handle?: string;
+  avatarUrl?: string;
+};
 interface Comment {
   id: number;
   post_id: number;
@@ -22,6 +33,104 @@ interface Comment {
   avatar?: string | null;
 }
 
+function pickRandomSponsors(list: Sponsor[], count = 3): Sponsor[] {
+  // Deduplicate by id and pick a stable slice without mutating the input.
+  // NOTE: Previously this function shuffled with Math.random(), which produced
+  // different output between server and client and caused React hydration
+  // mismatches. Return a deterministic selection (first N unique) instead.
+  const unique = Array.from(new Map(list.map((s) => [s.id ?? s.name, s])).values());
+  return unique.slice(0, Math.max(0, Math.min(count, unique.length)));
+}
+
+function MiniProfile({ user }: { user: User }) {
+  return (
+    <div className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 overflow-hidden rounded-full border border-white/20">
+          {/* Avatar */}
+          {user.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs text-white/70">
+              {user.name?.[0] ?? "?"}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold text-white">{user.name}</div>
+          {user.handle && (
+            <div className="truncate text-xs text-white/60">@{user.handle}</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SponsorsList({ sponsors }: { sponsors: Sponsor[] }) {
+  // Choose a deterministic initial set for SSR, then reshuffle on the client
+  const initialThree = useMemo(() => pickRandomSponsors(sponsors, 3), [sponsors]);
+  const [randomThree, setRandomThree] = React.useState<Sponsor[]>(initialThree);
+
+  // Run only on client to reshuffle so each reload can show different sponsors
+  React.useEffect(() => {
+    // shuffle a fresh copy on the client
+    const unique = Array.from(new Map(sponsors.map((s) => [s.id ?? s.name, s])).values());
+    for (let i = unique.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [unique[i], unique[j]] = [unique[j], unique[i]];
+    }
+    setRandomThree(unique.slice(0, Math.max(0, Math.min(3, unique.length))));
+  }, [sponsors]);
+
+  return (
+    <div className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-white">Featured Sponsors</h3>
+        <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">Random 3</span>
+      </div>
+      <ul className="space-y-3">
+        {randomThree.map((s) => (
+          <li key={s.id} className="group">
+            <a
+              href={s.href ?? "#"}
+              className="flex items-center gap-3 rounded-xl border border-white/10 p-3 transition hover:border-indigo-400/50 hover:bg-white/5"
+            >
+              <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-white/10">
+                {s.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={s.logoUrl} alt={s.name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-[10px] text-white/70">
+                    {s.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium text-white">{s.name}</div>
+                <div className="truncate text-xs text-white/60">{s.description}</div>
+              </div>
+            </a>
+          </li>
+        ))}
+        {randomThree.length === 0 && (
+          <li className="text-xs text-white/60">No sponsors found.</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+export function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
+  return (
+    // inner aside should be full width of its parent column — width is controlled by the wrapper
+    <aside className="sticky top-4 flex w-full flex-col gap-4">
+      <MiniProfile user={user} />
+      <SponsorsList sponsors={sponsors} />
+    </aside>
+  );
+}
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -30,6 +139,20 @@ export default function Home() {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
 
+   const user: User = {
+    name: "Eric Lee",
+    handle: "eric",
+    avatarUrl: "/pfp.png",
+  };
+
+
+   const sponsors: Sponsor[] = [
+    { id: "100t", name: "100 Thieves", description: "Gaming org based in LA", logoUrl: "/logos/100t.png", href: "/sponsors/100t" },
+    { id: "liquid", name: "Team Liquid", description: "Global esports team", logoUrl: "/logos/tl.png", href: "/sponsors/team-liquid" },
+    { id: "sentinels", name: "Sentinels", description: "Esports org from LA", logoUrl: "/logos/sen.png" },
+    { id: "c9", name: "Cloud9", description: "Esports org from NA", logoUrl: "/logos/c9.png" },
+    { id: "guard", name: "The Guard", description: "LA-based esports org" },
+  ];
   // Fetch posts
   useEffect(() => {
     async function fetchPosts() {
@@ -149,8 +272,15 @@ export default function Home() {
     comments.filter((c) => c.parent_comment_id === parentId);
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-start bg-black">
-      <section className="h-auto w-[50%] mt-5 flex flex-col items-center justify-start bg-black p-8">
+    <div className="h-full w-full flex justify-center bg-black text-white p-6">
+      {/**Left Side content */}
+<aside className="hidden lg:flex lg:w-1/4">
+        <div className="sticky top-4 w-full">
+          <MiniProfile user={user} />
+        </div>
+      </aside>
+      {/**Main feed Section */}
+      <section className="h-auto w-[40%] mt-5 flex flex-col items-center justify-start bg-black p-8">
         <FloatingDockDemo></FloatingDockDemo>
         <h1 className="text-2xl font-bold mb-4 text-white">Feed</h1>
 
@@ -300,6 +430,11 @@ export default function Home() {
           ))}
         </div>
       </section>
+      {/* Right Sidebar */}
+       <aside className="hidden lg:flex lg:w-1/4">
+        <RightSidebar user={user} sponsors={sponsors} />
+      </aside>
+
     </div>
   );
 }
