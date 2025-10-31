@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 
 interface Post {
   id: number;
@@ -149,8 +150,9 @@ export default function Home() {
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-start bg-black">
-      <section className="h-auto w-[40%] mt-5 flex flex-col items-center justify-start bg-black p-4">
-        <h1 className="text-2xl font-bold mb-4 text-white">Posts History</h1>
+      <section className="h-auto w-[50%] mt-5 flex flex-col items-center justify-start bg-black p-8">
+        <FloatingDockDemo></FloatingDockDemo>
+        <h1 className="text-2xl font-bold mb-4 text-white">Feed</h1>
 
         <div className="w-full flex flex-col gap-4">
           {posts.map((post) => (
