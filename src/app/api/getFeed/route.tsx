@@ -10,24 +10,16 @@ host: process.env.MYSQL_HOST,
 
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url);
-    const username = url.searchParams.get("username");
+  
 
-    if (!username) {
-      return new Response(
-        JSON.stringify({ error: "Missing username parameter" }),
-        { status: 400 }
-      );
-    }
+  
 
     const [rows] = await pool.execute(
       `SELECT p.id, p.title, p.description, p.media_url, p.created_at, p.username,
               u.profile_pic AS avatar
        FROM posts p
        LEFT JOIN users u ON p.username = u.userName
-       WHERE p.username = ?
-       ORDER BY p.created_at DESC`,
-      [username]
+       ORDER BY p.created_at DESC`
     );
 
     return new Response(JSON.stringify(rows), { status: 200 });

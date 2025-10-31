@@ -120,10 +120,11 @@ const [userId, setUserId] = useState<number | null>(null);
 
       if (data.success) {
         // Update post list immediately
-        setPosts([
-          { id: data.postId, title, description, media_url },
-          ...posts,
-        ]);
+        const newPost = data.post
+          ? data.post
+          : { id: data.postId, title, description, media_url, username: userName, created_at: new Date().toISOString(), avatar: profilePic };
+
+        setPosts([newPost, ...posts]);
         // Reset form
         setTitle("");
         setDescription("");
@@ -248,6 +249,19 @@ const [userId, setUserId] = useState<number | null>(null);
                     key={post.id}
                     className="-500 rounded-lg p-3 bg-indigo-900"
                   >
+                    <div className="flex items-center gap-3 mb-1">
+                      {profilePic ? (
+                        <img src={profilePic} alt={`${userName || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
+                      )}
+                      <div className="flex flex-col">
+                        {userName && <div className="text-sm text-gray-200">@{userName}</div>}
+                        {post.created_at && (
+                          <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
+                        )}
+                      </div>
+                    </div>
                     <h2 className="font-bold">{post.title}</h2>
                     <p>{post.description}</p>
                     {post.media_url && (

@@ -242,4 +242,7 @@ export default function InboxPage() {
     </section>
   );
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> cam

@@ -23,7 +23,7 @@ export function NavbarDemo() {
   const navItems = [
     {
       name: "Features",
-      link: "#features",
+      link: "/FeaturesPage",
     },
     {
       name: "Pricing",
@@ -104,6 +104,5 @@ export function NavbarDemo() {
     </div>
   );
 }
-
 
 
