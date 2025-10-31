@@ -3,7 +3,7 @@ import { FloatingDock } from "./floating-dock";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-
+//force deploy comment
 import {
   IconBrandGithub,
   IconBrandX,
@@ -52,9 +52,6 @@ export function FloatingDockDemo() {
     {
       title: "Inbox",
       icon: (
-<<<<<<< HEAD
-        <IconInbox className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-=======
         <Image
           src="/inbox-svgrepo-com.svg"            
           alt="Inbox"
@@ -63,7 +60,6 @@ export function FloatingDockDemo() {
           className="h-full w-full object-contain scale-125"
           priority
         />
->>>>>>> cam
       ),
       href: "/InboxPage",
       
