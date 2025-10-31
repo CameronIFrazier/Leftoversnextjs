@@ -3,13 +3,16 @@ import { FloatingDock } from "./floating-dock";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-
+//force deploy comment again
 import {
   IconBrandGithub,
   IconBrandX,
+  IconEdit,
   IconExchange,
   IconHome,
+  IconInbox,
   IconNewSection,
+  IconNotebook,
   IconTerminal2,
   IconUser,
 } from "@tabler/icons-react";
@@ -72,14 +75,11 @@ export function FloatingDockDemo() {
     {
       title: "Feed",
       icon: (
-        <IconTerminal2 className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+        <IconNotebook className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "/feedPage",
     }
 
-    
-
-    
     
   ];
   return (

@@ -96,6 +96,7 @@ const SPONSORS: Sponsor[] = [
   
 ];
 
+// Sponsor card generate
 function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
   const initials =
     sponsor.short ??
@@ -107,10 +108,11 @@ function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
       .toUpperCase();
 
   return (
-    <div className="border border-white rounded-lg p-4 bg-black hover:bg-indigo-950 transition">
+    <GradientBorder>
+    <div className="border border-white rounded-lg p-4 bg-black">
       {/* Avatar and Name */}
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full border border-white flex items-center justify-center text-sm font-bold overflow-hidden relative">
+      <div className="w-12 h-12 rounded-full border border-white flex items-center justify-center text-sm font-bold overflow-hidden relative">
           {sponsor.logo ? (
             <Image
               src={sponsor.logo}
@@ -130,25 +132,26 @@ function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
             <p className="text-sm text-gray-300">{sponsor.location}</p>
           )}
         </div>
-
-        {/* Description */}
-        <p className="mt-3 text-sm leading-relaxed text-gray-100">
-          {sponsor.description}
-        </p>
-
-        {/* Website Link Only */}
-        {sponsor.website && (
-          <a
-            href={sponsor.website}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-block mt-4 px-3 py-1 rounded-md border border-white text-xs hover:bg-white hover:text-black transition"
-          >
-            Visit Website
-          </a>
-        )}
       </div>
+
+      {/* Description */}
+      <p className="mt-3 text-sm leading-relaxed text-gray-100">
+        {sponsor.description}
+      </p>
+
+      {/* Website Link Only */}
+      {sponsor.website && (
+        <a
+          href={sponsor.website}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block mt-4 px-3 py-1 rounded-md border border-white text-xs hover:bg-white hover:text-black transition"
+        >
+          Visit Website
+        </a>
+      )}
     </div>
+    </GradientBorder>
   );
 }
 
@@ -171,7 +174,9 @@ export default function SponsorPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 pl-4">Sponsors</h1>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Sponsors</h1>
+          </div>
             <p className="text-sm text-gray-300">
               Discover partners and organizations supporting our community.
             </p>
@@ -197,11 +202,7 @@ export default function SponsorPage() {
           )}
         </div>
       </section>
-      
-      {/* Fixed dock at bottom */}
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-        <FloatingDockDemo />
-      </div>
+      <FloatingDockDemo />
     </section>
   );
 }

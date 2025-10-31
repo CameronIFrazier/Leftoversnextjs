@@ -1,0 +1,7 @@
+# Ignore generated Prisma client and other generated code
+src/generated/
+src/generated/**
+
+# Ignore other build artifacts
+.next/
+node_modules/
