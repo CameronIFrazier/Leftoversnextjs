@@ -392,7 +392,7 @@ export default function Home() {
   return (
     <div className="h-full w-full flex justify-center bg-black text-white p-6 min-h-screen">
       {/**Left Side content */}
-      <aside className="hidden lg:flex lg:w-1/4">
+<aside className="hidden lg:flex lg:w-1/4">
         <div className="sticky top-4 w-full">
           <MiniProfile user={user} />
         </div>
