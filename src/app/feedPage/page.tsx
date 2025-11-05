@@ -1,6 +1,15 @@
 "use client";
+/// <reference types="react" />
 import React, { useState, useEffect, useMemo } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      [elemName: string]: any;
+    }
+  }
+}
 
 // Loading dots component
 function LoadingDots() {
@@ -104,7 +113,7 @@ function SponsorsList({ sponsors }: { sponsors: Sponsor[] }) {
         <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">Random 3</span>
       </div>
       <ul className="space-y-3">
-        {randomThree.map((s) => (
+  {randomThree.map((s: Sponsor) => (
           <li key={s.id} className="group">
             <a
               href={s.href ?? "#"}
@@ -211,13 +220,13 @@ const CommentItem = React.memo(function CommentItemComponent({
             Reply
           </button>
 
-          {replyingTo === comment.id && (
+                {replyingTo === comment.id && (
             <div className="mt-2 flex gap-2 items-center">
               <input
                 ref={inputRef}
                 type="text"
                 value={replyInputs[comment.id] || ""}
-                onChange={(e) => setReplyInputs((prev) => ({ ...prev, [comment.id]: e.target.value }))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReplyInputs((prev: { [key: number]: string }) => ({ ...prev, [comment.id]: e.target.value }))}
                 placeholder="Write a reply..."
                 className="flex-grow rounded-lg p-2 text-black"
               />
@@ -229,7 +238,7 @@ const CommentItem = React.memo(function CommentItemComponent({
 
           {children.length > 0 && (
             <div className="ml-5 mt-2 space-y-1">
-              {children.map((child) => (
+              {children.map((child: Comment) => (
                 <CommentItem key={child.id} comment={child} postId={postId} depth={depth + 1} getReplies={getReplies} replyingTo={replyingTo} setReplyingTo={setReplyingTo} replyInputs={replyInputs} setReplyInputs={setReplyInputs} handleReplySubmit={handleReplySubmit} />
               ))}
             </div>
@@ -248,11 +257,8 @@ export default function Home() {
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-   const user: User = {
-    name: "Eric Lee",
-    handle: "eric",
-    avatarUrl: "/pfp.png",
-  };
+  // Current logged-in user — will be populated from JWT-protected endpoints when available
+  const [user, setUser] = useState<User>({ name: "Guest", handle: undefined, avatarUrl: undefined });
 
 
    const sponsors: Sponsor[] = [
@@ -291,21 +297,39 @@ export default function Home() {
   }, []);
 
   // Fetch current user's username (if logged in) so we can include it when posting comments
+  // Fetch current user's username and profile picture (if logged in)
   useEffect(() => {
-    async function fetchCurrentUserName() {
+    async function fetchCurrentUserProfile() {
       if (typeof window === 'undefined') return;
       const token = localStorage.getItem('token');
       if (!token) return;
+
       try {
-        const res = await fetch('/api/getUserName', { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.userName) setCurrentUserName(data.userName);
+        // fetch username
+        const nameRes = await fetch('/api/getUserName', { headers: { Authorization: `Bearer ${token}` } });
+        if (nameRes.ok) {
+          const nameData = await nameRes.json();
+          if (nameData.userName) {
+            setCurrentUserName(nameData.userName);
+            setUser((prev: User) => ({ ...prev, name: nameData.userName }));
+          }
+        }
+
+        // fetch profile picture
+        const pfpRes = await fetch('/api/getUserPfp', { headers: { Authorization: `Bearer ${token}` } });
+        if (pfpRes.ok) {
+          const pfpData = await pfpRes.json();
+          // server returns { profilePic: ... }
+          if (pfpData && pfpData.profilePic) {
+            setUser((prev: User) => ({ ...prev, avatarUrl: pfpData.profilePic }));
+          }
+        }
       } catch (err) {
-        console.error('Failed to fetch current username:', err);
+        console.error('Failed to fetch current user profile:', err);
       }
     }
-    fetchCurrentUserName();
+
+    fetchCurrentUserProfile();
   }, []);
 //force
   // Fetch comments
@@ -336,7 +360,7 @@ export default function Home() {
     if (!comment?.trim()) return;
 
     await addCommentToDB(postId, comment);
-    setNewComments((prev) => ({ ...prev, [postId]: "" }));
+    setNewComments((prev: { [key: number]: string }) => ({ ...prev, [postId]: "" }));
   };
 
   // Submit a reply
@@ -345,7 +369,7 @@ export default function Home() {
     if (!replyText?.trim()) return;
 
     await addCommentToDB(postId, replyText, parentId);
-    setReplyInputs((prev) => ({ ...prev, [parentId]: "" }));
+    setReplyInputs((prev: { [key: number]: string }) => ({ ...prev, [parentId]: "" }));
     setReplyingTo(null);
   };
 
@@ -380,11 +404,11 @@ export default function Home() {
 
   // Filter top-level comments
   const getTopLevelComments = (postId: number) =>
-    comments.filter((c) => c.post_id === postId && c.parent_comment_id === null);
+    comments.filter((c: Comment) => c.post_id === postId && c.parent_comment_id === null);
 
   // Get replies for a comment
   const getReplies = (parentId: number) =>
-    comments.filter((c) => c.parent_comment_id === parentId);
+    comments.filter((c: Comment) => c.parent_comment_id === parentId);
 
   
 
@@ -405,7 +429,7 @@ export default function Home() {
           {isLoading ? (
             <LoadingDots />
           ) : (
-            posts.map((post) => (
+            posts.map((post: Post) => (
             <div key={post.id} className="rounded-lg p-3 bg-indigo-900 text-white">
               <div className="flex items-center gap-3 mb-2">
                 {post.avatar ? (
@@ -434,7 +458,7 @@ export default function Home() {
                 {getTopLevelComments(post.id).length === 0 ? (
                   <p className="text-gray-300 text-sm">No comments yet.</p>
                 ) : (
-                  getTopLevelComments(post.id).map((c) => (
+                  getTopLevelComments(post.id).map((c: Comment) => (
                     <CommentItem
                       key={c.id}
                       comment={c}
@@ -451,7 +475,7 @@ export default function Home() {
 
                 {/* Add Comment Form */}
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
                     e.preventDefault();
                     handleCommentSubmit(post.id);
                   }}
@@ -460,8 +484,8 @@ export default function Home() {
                   <input
                     type="text"
                     value={newComments[post.id] || ""}
-                    onChange={(e) =>
-                      setNewComments((prev) => ({
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setNewComments((prev: { [key: number]: string }) => ({
                         ...prev,
                         [post.id]: e.target.value,
                       }))
@@ -483,7 +507,7 @@ export default function Home() {
         </div>
       </section>
       {/* Right Sidebar */}
-       <aside className="hidden lg:flex lg:w-1/4">
+      <aside className="hidden lg:flex lg:w-1/4">
         <RightSidebar user={user} sponsors={sponsors} />
       </aside>
 
