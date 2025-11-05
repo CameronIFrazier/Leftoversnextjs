@@ -60,7 +60,7 @@ export default function ProfilePage() {
       setTimeout(() => {
         setToastMessage(null);
       }, 500); // 500ms matches the transition duration
-    }, 3000); // Start fading 300ms before the 5 second mark
+    }, 5000); // Start fading 300ms before the 5 second mark
   };
 
   useEffect(() => {
