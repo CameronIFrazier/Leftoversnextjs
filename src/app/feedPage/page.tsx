@@ -219,9 +219,9 @@ const CommentItem = React.memo(function CommentItemComponent({
                 value={replyInputs[comment.id] || ""}
                 onChange={(e) => setReplyInputs((prev) => ({ ...prev, [comment.id]: e.target.value }))}
                 placeholder="Write a reply..."
-                className="flex-grow rounded-lg p-2 text-black"
+                className="flex-grow rounded-lg p-2 text-indigo-200"
               />
-              <button type="button" onClick={() => handleReplySubmit(postId, comment.id)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">
+              <button type="button" onClick={() => handleReplySubmit(postId, comment.id)} className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg">
                 Send
               </button>
             </div>
@@ -282,6 +282,7 @@ export default function Home() {
 
         setPosts(normalized);
       } catch (error) {
+  
         console.error('Error fetching posts:', error);
       } finally {
         setIsLoading(false);
@@ -391,7 +392,7 @@ export default function Home() {
   return (
     <div className="h-full w-full flex justify-center bg-black text-white p-6 min-h-screen">
       {/**Left Side content */}
-<aside className="hidden lg:flex lg:w-1/4">
+      <aside className="hidden lg:flex lg:w-1/4">
         <div className="sticky top-4 w-full">
           <MiniProfile user={user} />
         </div>
@@ -467,11 +468,11 @@ export default function Home() {
                       }))
                     }
                     placeholder="Write a comment..."
-                    className="flex-grow rounded-lg p-2 text-black"
+                    className="flex-grow rounded-lg p-2 text-white"
                   />
                   <button
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+                    className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg"
                   >
                     Post
                   </button>
