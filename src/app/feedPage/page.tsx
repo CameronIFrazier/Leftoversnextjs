@@ -2,27 +2,7 @@
 /// <reference types="react" />
 import React, { useState, useEffect, useMemo } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
-
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      [elemName: string]: any;
-    }
-  }
-}
-
-// Loading dots component
-function LoadingDots() {
-  return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="flex space-x-2">
-        <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-        <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-        <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce"></div>
-      </div>
-    </div>
-  );
-}
+import { LoadingDots } from "../components/ui/LoadingDots";
 
 interface Post {
   id: number;
@@ -188,7 +168,7 @@ const CommentItem = React.memo(function CommentItemComponent({
   }, [replyingTo, comment.id]);
 
   return (
-    <div className={`bg-indigo-${800 - Math.min(depth * 50, 400)} rounded-lg p-2 mb-2`}>
+    <div className={`${depth > 0 ? 'border-l-2 border-l-indigo-400 pl-4 ml-2' : ''} rounded-lg p-2 mb-2`}>
       <div className="flex items-start gap-3">
         {comment.avatar ? (
           <img
@@ -228,9 +208,9 @@ const CommentItem = React.memo(function CommentItemComponent({
                 value={replyInputs[comment.id] || ""}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReplyInputs((prev: { [key: number]: string }) => ({ ...prev, [comment.id]: e.target.value }))}
                 placeholder="Write a reply..."
-                className="flex-grow rounded-lg p-2 text-black"
+                className="flex-grow rounded-lg p-2 text-indigo-200"
               />
-              <button type="button" onClick={() => handleReplySubmit(postId, comment.id)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">
+              <button type="button" onClick={() => handleReplySubmit(postId, comment.id)} className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg">
                 Send
               </button>
             </div>
@@ -288,6 +268,7 @@ export default function Home() {
 
         setPosts(normalized);
       } catch (error) {
+  
         console.error('Error fetching posts:', error);
       } finally {
         setIsLoading(false);
@@ -421,38 +402,41 @@ export default function Home() {
         </div>
       </aside>
       {/**Main feed Section */}
-      <section className="h-auto w-[40%] mt-5 flex flex-col items-center justify-start bg-black p-8">
-        <FloatingDockDemo></FloatingDockDemo>
-        <h1 className="text-2xl font-bold mb-4 text-white">Feed</h1>
+      <section className="h-auto w-[60%] mt-5 flex flex-col items-center justify-start bg-black p-8">
+        <h1 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 p-4">Feed Page</h1>
+         <FloatingDockDemo></FloatingDockDemo>
 
         <div className="w-full flex flex-col gap-4">
           {isLoading ? (
             <LoadingDots />
           ) : (
-            posts.map((post: Post) => (
-            <div key={post.id} className="rounded-lg p-3 bg-indigo-900 text-white">
-              <div className="flex items-center gap-3 mb-2">
-                {post.avatar ? (
-                  <img src={post.avatar} alt={`${post.username || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
-                )}
-                <div className="flex flex-col">
-                  {post.username && <div className="text-sm text-gray-200">@{post.username}</div>}
-                  {post.created_at && (
-                    <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
+            posts.map((post) => (
+            <div key={post.id} className="rounded-lg border border-gray-700 p-4 mb-6">
+              {/* Post Content */}
+              <div className="rounded-lg p-3 bg-indigo-900 text-white mb-3">
+                <div className="flex items-center gap-3 mb-2">
+                  {post.avatar ? (
+                    <img src={post.avatar} alt={`${post.username || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
                   )}
+                  <div className="flex flex-col">
+                    {post.username && <div className="text-base text-gray-200 font-bold">{post.username}</div>}
+                    {post.created_at && (
+                      <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <h2 className="font-bold text-lg">{post.title}</h2>
-              <p>{post.description}</p>
+                <h2 className="font-bold text-base">{post.title}</h2>
+                <p className="text-sm text-gray-200">{post.description}</p>
 
-              {post.media_url && (
-                <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
-              )}
+                {post.media_url && (
+                  <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
+                )}
+              </div>
 
               {/* Comments Section */}
-              <div className="mt-3">
+              <div className="mt-3"> 
                 <h3 className="font-semibold mb-2">Comments</h3>
 
                 {getTopLevelComments(post.id).length === 0 ? (
@@ -491,11 +475,11 @@ export default function Home() {
                       }))
                     }
                     placeholder="Write a comment..."
-                    className="flex-grow rounded-lg p-2 text-black"
+                    className="flex-grow rounded-lg p-2 text-white bg-indigo-800/30 focus:outline-none focus:border-indigo-400"
                   />
                   <button
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+                    className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg"
                   >
                     Post
                   </button>
