@@ -172,11 +172,21 @@ export default function ProfilePage() {
         setTitle("");
         setDescription("");
         setMedia(null);
+        
+        // Scroll to the posts section after successful post creation
+        setTimeout(() => {
+          const postsSection = document.getElementById("past-post");
+          if (postsSection) {
+            postsSection.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100); // Small delay to ensure DOM updates are complete
+        
+        showToast("Post created successfully!");
       } else {
-        console.error("Failed to create post:", data.error);
+        showToast("Failed to create post.");
       }
     } catch (err) {
-      console.error("Error creating post:", err);
+      showToast("Error creating post.");
     }
   };
 
@@ -358,7 +368,7 @@ export default function ProfilePage() {
               {/* Divider */}
             <div className="my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
           {/* 🔹 Past Posts Section */}
-          <section className="h-auto rounded-lg mt-5 flex flex-col items-center justify-start bg-black p-4">
+          <section id="past-post" className="h-auto rounded-lg mt-5 flex flex-col items-center justify-start bg-black p-4">
             <h1 className="text-2xl font-bold mb-4 text-white-300">Posts History</h1>
             <div className="w-full flex flex-col gap-4">
               {posts.length === 0 ? (
