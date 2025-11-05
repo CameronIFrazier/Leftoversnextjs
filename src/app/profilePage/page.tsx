@@ -179,7 +179,7 @@ export default function ProfilePage() {
           if (postsSection) {
             postsSection.scrollIntoView({ behavior: "smooth" });
           }
-        }, 100); // Small delay to ensure DOM updates are complete
+        }, 200); // Small delay to ensure DOM updates are complete
         
         showToast("Post created successfully!");
       } else {
