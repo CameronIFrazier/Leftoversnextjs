@@ -242,10 +242,10 @@ export default function Home() {
 
 
    const sponsors: Sponsor[] = [
-    { id: "100t", name: "100 Thieves", description: "Gaming org based in LA", logoUrl: "/logos/100t.png", href: "/sponsors/100t" },
-    { id: "liquid", name: "Team Liquid", description: "Global esports team", logoUrl: "/logos/tl.png", href: "/sponsors/team-liquid" },
-    { id: "sentinels", name: "Sentinels", description: "Esports org from LA", logoUrl: "/logos/sen.png" },
-    { id: "c9", name: "Cloud9", description: "Esports org from NA", logoUrl: "/logos/c9.png" },
+    { id: "100t", name: "100 Thieves", description: "Gaming org based in LA", logoUrl: "/sponsors/100thieves.png", href: "/sponsors/100t" },
+    { id: "liquid", name: "Team Liquid", description: "Global esports team", logoUrl: "/sponsors/teamliquid.png", href: "/sponsors/team-liquid" },
+    { id: "sentinels", name: "Sentinels", description: "Esports org from LA", logoUrl: "/sponsors/sentinels.png" },
+    { id: "c9", name: "Cloud9", description: "Esports org from NA", logoUrl: "/sponsors/cloud9.png" },
     { id: "guard", name: "The Guard", description: "LA-based esports org" },
   ];
   // Fetch posts
