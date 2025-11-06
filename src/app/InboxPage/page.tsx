@@ -126,19 +126,20 @@ export default function InboxPage() {
       <div className="mx-auto max-w-5xl px-3 py-6 sm:px-6">
 
       {/* Title */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
+        <div className="sticky top-0 z-50 w-full bg-black border-b border-gray-700 flex px-6 flex items-center justify-between  mb-6">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Inbox</h1>
-          </div>
-          <div>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search inbox..."
-              className="px-3 py-2 w-64 rounded-md border border-white bg-indigo-900 placeholder-gray-300"
-            />
-          </div>
+            <FloatingDockDemo />
+
         </div>
+
+      <div className="mb-5 flex items-center justify-between">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search inbox..."
+          className="px-3 py-2 w-64 rounded-md border border-white bg-indigo-900 placeholder-gray-300"
+        />
+      </div>
 
       {/* Inbox Shell */}
       <section className="rounded-3xl border border-purple-500 bg-indigo-900 shadow-sm">
@@ -234,9 +235,6 @@ export default function InboxPage() {
           )}
         </ul>
       </section>
-            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2">
-        <FloatingDockDemo />
-      </div>
       </div>
     </section>
   );

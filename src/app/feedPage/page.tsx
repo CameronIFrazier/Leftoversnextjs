@@ -127,7 +127,7 @@ function SponsorsList({ sponsors }: { sponsors: Sponsor[] }) {
 function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
   return (
     // inner aside should be full width of its parent column — width is controlled by the wrapper
-    <aside className="sticky top-4 flex w-full flex-col gap-4">
+    <aside className="sticky top-24 flex w-full flex-col gap-4 py-10">
       <MiniProfile user={user} />
       <SponsorsList sponsors={sponsors} />
     </aside>
@@ -394,19 +394,18 @@ export default function Home() {
   
 
   return (
-    <div className="h-full w-full flex justify-center bg-black text-white p-6 min-h-screen">
-      {/**Left Side content */}
-<aside className="hidden lg:flex lg:w-1/4">
-        <div className="sticky top-4 w-full">
-          <MiniProfile user={user} />
-        </div>
-      </aside>
-      {/**Main feed Section */}
-      <section className="h-auto w-[60%] mt-5 flex flex-col items-center justify-start bg-black p-8">
-        <h1 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 p-4">Feed Page</h1>
-         <FloatingDockDemo></FloatingDockDemo>
-
-        <div className="w-full flex flex-col gap-4">
+    <div className="h-full w-full bg-black text-white min-h-screen">
+      {/* Sticky Navbar */}
+      <div className="sticky top-0 z-50 w-full bg-black/95 border-b border-gray-700 flex px-6 items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Feed Page</h1>
+            <FloatingDockDemo />
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex justify-center p-6 pt-6">      
+        {/**Main feed Section */}
+        <section className="w-[60%] flex flex-col items-center justify-start bg-black">
+          <div className="w-full flex flex-col gap-4">
           {isLoading ? (
             <LoadingDots />
           ) : (
@@ -488,13 +487,14 @@ export default function Home() {
             </div>
           ))
           )}
-        </div>
-      </section>
-      {/* Right Sidebar */}
-      <aside className="hidden lg:flex lg:w-1/4">
-        <RightSidebar user={user} sponsors={sponsors} />
-      </aside>
-
+            </div>
+          </section>
+        
+        {/* Right Sidebar */}
+        <aside className="hidden lg:flex lg:w-1/4 pl-10 sticky top-24 self-start">
+          <RightSidebar user={user} sponsors={sponsors} />
+        </aside>
+      </div>
     </div>
   );
 }
