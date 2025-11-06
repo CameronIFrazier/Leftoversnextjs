@@ -136,17 +136,7 @@ function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
 
 // Top-level, memoized CommentItem to avoid remounting on parent renders.
 // It receives all handlers and lookup function as props to stay pure.
-const CommentItem = React.memo(function CommentItemComponent({
-  comment,
-  postId,
-  depth = 0,
-  getReplies,
-  replyingTo,
-  setReplyingTo,
-  replyInputs,
-  setReplyInputs,
-  handleReplySubmit,
-}: {
+interface CommentItemProps {
   comment: Comment;
   postId: number;
   depth?: number;
@@ -156,7 +146,21 @@ const CommentItem = React.memo(function CommentItemComponent({
   replyInputs: { [key: number]: string };
   setReplyInputs: React.Dispatch<React.SetStateAction<{ [key: number]: string }>>;
   handleReplySubmit: (postId: number, parentId: number) => Promise<void>;
-}) {
+  // Allow React `key` attribute to be passed in JSX without type errors
+  key?: React.Key;
+}
+
+function CommentItemComponent({
+  comment,
+  postId,
+  depth = 0,
+  getReplies,
+  replyingTo,
+  setReplyingTo,
+  replyInputs,
+  setReplyInputs,
+  handleReplySubmit,
+}: CommentItemProps) {
   const children = getReplies(comment.id);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -227,7 +231,8 @@ const CommentItem = React.memo(function CommentItemComponent({
       </div>
     </div>
   );
-});
+}
+const CommentItem = React.memo(CommentItemComponent) as React.MemoExoticComponent<React.FC<CommentItemProps>>;
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
