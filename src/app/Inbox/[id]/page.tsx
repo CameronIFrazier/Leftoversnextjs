@@ -17,8 +17,9 @@ const THREADS: Record<string, ThreadMessage[]> = {
 	],
 };
 
-export default function ConversationPage({ params }: { params?: { id?: string } | Promise<{ id?: string }> }) {
-	const id = (params as any)?.id ?? '1';
+export default function ConversationPage(props: any) {
+	const params = props?.params;
+	const id = params?.id ?? '1';
 	const thread = THREADS[id] ?? [];
 
 	return (
