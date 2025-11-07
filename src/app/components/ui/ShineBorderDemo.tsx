@@ -48,7 +48,7 @@ export function ShineBorderDemo() {
         setTimeout(() => {
           setIsLoading(false);
           // Redirect to profile page (match route folder casing)
-          router.push("/ProfilePage");
+          router.push("/profilePage");
         }, 1500);
         
       } else {
