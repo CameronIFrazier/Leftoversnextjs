@@ -241,7 +241,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="sticky top-0 z-50 w-full bg-black backdrop-blur-md border-b border-gray-700 flex px-6 items-center justify-center">
+      <div className="sticky top-0 z-50 w-full bg-black backdrop-blur-md border-b border-gray-700 flex px-6 items-center ">
         <FloatingDockDemo />
       </div>
       <section className="w-[98%] flex flex-row items-start justify-center pb-5 pt-5">
