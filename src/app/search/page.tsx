@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+
+import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 
 type SearchUser = {
   id: number;
@@ -9,15 +11,24 @@ type SearchUser = {
   email: string;
 };
 
-export default function SearchPage() {
-  const searchParams = useSearchParams();
-  const query = searchParams.get("query");
+export default function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ query?: string }>;
+}) {
+  
+  const params = use(searchParams);
+  const query = typeof params?.query === "string" ? params.query : "";
+
   const [results, setResults] = useState<SearchUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!query) return;
+    if (!query) {
+      setResults([]);
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -40,14 +51,18 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center py-10">
       <h1 className="text-3xl font-bold mb-6">
-        Search results for: <span className="text-purple-400">{query}</span>
+        Search results for:{" "}
+        <span className="text-purple-400">{query || "(none)"}</span>
       </h1>
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
-      {!loading && !error && results.length === 0 && <p>No users found.</p>}
+      {!loading && !error && query && results.length === 0 && <p>No users found.</p>}
+      {!loading && !error && !query && (
+        <p>Type a query in the URL (?query=...) to search.</p>
+      )}
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 mt-4">
         {results.map((user) => (
           <Link
             key={user.id}
