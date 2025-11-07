@@ -1,8 +1,11 @@
 "use client";
 /// <reference types="react" />
 import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 import { LoadingDots } from "../components/ui/LoadingDots";
+import { PeopleYouMayKnow } from "../components/ui/PeopleYouMayKnow";
+import { SponsorsList } from "../components/ui/SponsorsList";
 
 interface Post {
   id: number;
@@ -13,13 +16,6 @@ interface Post {
   media_url?: string | null;
   created_at?: string;
 }
-export type Sponsor = {
-  id: string;
-  name: string;
-  description: string;
-  logoUrl?: string;
-  href?: string;
-};
 export type User = {
   name: string;
   handle?: string;
@@ -35,13 +31,41 @@ interface Comment {
   avatar?: string | null;
 }
 
-function pickRandomSponsors(list: Sponsor[], count = 3): Sponsor[] {
-  // Deduplicate by id and pick a stable slice without mutating the input.
-  // NOTE: Previously this function shuffled with Math.random(), which produced
-  // different output between server and client and caused React hydration
-  // mismatches. Return a deterministic selection (first N unique) instead.
-  const unique = Array.from(new Map(list.map((s) => [s.id ?? s.name, s])).values());
-  return unique.slice(0, Math.max(0, Math.min(count, unique.length)));
+// function pickRandomSponsors(list: Sponsor[], count = 3): Sponsor[] {
+//   // Deduplicate by id and pick a stable slice without mutating the input.
+//   // NOTE: Previously this function shuffled with Math.random(), which produced
+//   // different output between server and client and caused React hydration
+//   // mismatches. Return a deterministic selection (first N unique) instead.
+//   const unique = Array.from(new Map(list.map((s) => [s.id ?? s.name, s])).values());
+//   return unique.slice(0, Math.max(0, Math.min(count, unique.length)));
+// }
+
+function SearchBox() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = searchQuery.trim();
+    if (trimmed.length > 0) {
+      router.push(`/search?query=${encodeURIComponent(trimmed)}`);
+      setSearchQuery("");
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm">
+      <form onSubmit={handleSearch} className="w-full">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search users..."
+          className="w-full bg-transparent border border-gray-600 rounded-xl px-3 py-2 text-white placeholder-gray-400 outline-none focus:border-purple-400 transition-colors duration-200"
+        />
+      </form>
+    </div>
+  );
 }
 
 function MiniProfile({ user }: { user: User }) {
@@ -70,66 +94,14 @@ function MiniProfile({ user }: { user: User }) {
   );
 }
 
-function SponsorsList({ sponsors }: { sponsors: Sponsor[] }) {
-  // Choose a deterministic initial set for SSR, then reshuffle on the client
-  const initialThree = useMemo(() => pickRandomSponsors(sponsors, 3), [sponsors]);
-  const [randomThree, setRandomThree] = React.useState<Sponsor[]>(initialThree);
-
-  // Run only on client to reshuffle so each reload can show different sponsors
-  React.useEffect(() => {
-    // shuffle a fresh copy on the client
-    const unique = Array.from(new Map(sponsors.map((s) => [s.id ?? s.name, s])).values());
-    for (let i = unique.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [unique[i], unique[j]] = [unique[j], unique[i]];
-    }
-    setRandomThree(unique.slice(0, Math.max(0, Math.min(3, unique.length))));
-  }, [sponsors]);
-
-  return (
-    <div className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-white">Featured Sponsors</h3>
-        <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">Random 3</span>
-      </div>
-      <ul className="space-y-3">
-  {randomThree.map((s: Sponsor) => (
-          <li key={s.id} className="group">
-            <a
-              href={s.href ?? "#"}
-              className="flex items-center gap-3 rounded-xl border border-white/10 p-3 transition hover:border-indigo-400/50 hover:bg-white/5"
-            >
-              <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-white/10">
-                {s.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.logoUrl} alt={s.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-[10px] text-white/70">
-                    {s.name.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-white">{s.name}</div>
-                <div className="truncate text-xs text-white/60">{s.description}</div>
-              </div>
-            </a>
-          </li>
-        ))}
-        {randomThree.length === 0 && (
-          <li className="text-xs text-white/60">No sponsors found.</li>
-        )}
-      </ul>
-    </div>
-  );
-}
-
-function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
+function RightSidebar({ user }: { user: User }) {
   return (
     // inner aside should be full width of its parent column — width is controlled by the wrapper
-    <aside className="sticky top-24 flex w-full flex-col gap-4 py-10">
+    <aside className="sticky top-24 flex w-full flex-col gap-4 pb-10">
+      <SearchBox />
       <MiniProfile user={user} />
-      <SponsorsList sponsors={sponsors} />
+      <SponsorsList />
+      <PeopleYouMayKnow />
     </aside>
   );
 }
@@ -245,14 +217,6 @@ export default function Home() {
   // Current logged-in user — will be populated from JWT-protected endpoints when available
   const [user, setUser] = useState<User>({ name: "Guest", handle: undefined, avatarUrl: undefined });
 
-
-   const sponsors: Sponsor[] = [
-    { id: "100t", name: "100 Thieves", description: "Gaming org based in LA", logoUrl: "/sponsors/100thieves.png", href: "/sponsors/100t" },
-    { id: "liquid", name: "Team Liquid", description: "Global esports team", logoUrl: "/sponsors/teamliquid.png", href: "/sponsors/team-liquid" },
-    { id: "sentinels", name: "Sentinels", description: "Esports org from LA", logoUrl: "/sponsors/sentinels.png" },
-    { id: "c9", name: "Cloud9", description: "Esports org from NA", logoUrl: "/sponsors/cloud9.png" },
-    { id: "guard", name: "The Guard", description: "LA-based esports org" },
-  ];
   // Fetch posts
   useEffect(() => {
     async function fetchPosts() {
@@ -403,6 +367,7 @@ export default function Home() {
       {/* Sticky Navbar */}
       <div className="sticky top-0 z-50 w-full bg-black/95 border-b border-gray-700 flex px-6 items-center justify-between mb-6">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Feed Page</h1>
+            
             <FloatingDockDemo />
       </div>
       
@@ -497,7 +462,7 @@ export default function Home() {
         
         {/* Right Sidebar */}
         <aside className="hidden lg:flex lg:w-1/4 pl-10 sticky top-24 self-start">
-          <RightSidebar user={user} sponsors={sponsors} />
+          <RightSidebar user={user} />
         </aside>
       </div>
     </div>
