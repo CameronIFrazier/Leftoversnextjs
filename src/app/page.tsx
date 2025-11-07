@@ -5,6 +5,7 @@ import { NavbarDemo } from "./components/ui/NavbarDemo";
 import { GlobeDemo } from "./components/ui/GlobeDemo";
 import { ShineBorderDemo } from "./components/ui/ShineBorderDemo";
 import { ShineBorder } from "./components/ui/shineborder";
+import { PeopleYouMayKnow } from "./components/ui/PeopleYouMayKnow";
 
 export default function Home() {
   // Avoid accessing localStorage during server-side rendering.
@@ -64,8 +65,11 @@ export default function Home() {
             <div className="flex flex-1 min-h items-center justify-center">
               <GlobeDemo />
             </div>
-            <div className="h-[70vh] flex flex-none items-center justify-start">
+            <div className="flex flex-none flex-col items-center justify-start gap-6 min-h-[70vh]">
               <SignupFormDemo />
+              <div className="w-full max-w-md">
+                <PeopleYouMayKnow />
+              </div>
             </div>
           </div>
         </div>
