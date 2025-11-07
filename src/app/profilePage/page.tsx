@@ -24,6 +24,18 @@ export default function ProfilePage() {
   const [isEditMode, setIsEditMode] = useState(false); // 🔹 NEW — edit mode state
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 🔹 NEW — toast notification
   const [toastVisible, setToastVisible] = useState(false); // 🔹 NEW — toast visibility for fade animation
+  // Suggestions state for "People you may know"
+  interface SuggestionItem {
+    id: number | string;
+    name: string;
+    handle?: string;
+    mutuals?: number;
+    avatar?: string | null;
+    username?: string;
+  }
+
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
+  const [following, setFollowing] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     // Add click outside listener to turn off edit mode
@@ -104,6 +116,34 @@ export default function ProfilePage() {
           );
           const dataPosts = await resPosts.json();
           setPosts(dataPosts);
+        }
+        // Fetch suggestions from /api/users and pick up to 5 random users (exclude current)
+        try {
+          const resUsers = await fetch('/api/users');
+          const usersJson = await resUsers.json();
+          const allUsers = usersJson.users || [];
+
+          // Filter out current user by username (if available)
+          const candidates = allUsers.filter((u: any) => u.username !== dataUser.userName);
+
+          // Shuffle (Fisher-Yates)
+          for (let i = candidates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+          }
+
+          const picked = candidates.slice(0, 5).map((u: any) => ({
+            id: u.id,
+            name: u.name || `${u.firstname || ''} ${u.lastname || ''}`.trim() || u.username,
+            handle: u.username,
+            avatar: u.avatar || u.profile_pic || null,
+            mutuals: 0,
+            username: u.username,
+          }));
+
+          setSuggestions(picked);
+        } catch (e) {
+          console.error('Failed to load suggestions:', e);
         }
       } catch (err) {
         console.error("Failed to fetch user data:", err);
@@ -416,7 +456,37 @@ export default function ProfilePage() {
           <GradientBorder>
             <section className="h-[1020px] rounded-lg flex flex-col items-center justify-start bg-black p-4">
               <h1 className="mb-5 text-purple-300 font-bold">People you may know</h1>
-              <div className="w-[90%] h-[90%] bg-indigo-900 rounded-lg"></div>
+              <div className="w-[90%] h-[90%] bg-indigo-900 rounded-lg p-3 overflow-auto">
+                <ul className="space-y-3">
+                  {suggestions.map((s) => (
+                    <li key={s.id} className="flex items-center justify-between gap-3 p-2 rounded-md bg-black/20">
+                      <div className="flex items-center gap-3">
+                        {s.avatar ? (
+                          <img src={s.avatar} alt={`${s.name} avatar`} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-indigo-700 flex items-center justify-center text-sm font-semibold text-white">
+                            {s.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{s.name}</span>
+                          <span className="text-xs text-purple-300">@{s.handle ?? s.name.toLowerCase().replace(/\s+/g,'')}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end">
+                        <span className="text-xs text-purple-300">{s.mutuals ? `${s.mutuals} mutuals` : 'New'}</span>
+                        <button
+                          onClick={() => setFollowing((f) => ({ ...f, [String(s.id)]: !f[String(s.id)] }))}
+                          className={`mt-2 px-3 py-1 rounded-full text-sm font-medium ${following[String(s.id)] ? 'bg-gray-700 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                        >
+                          {following[String(s.id)] ? 'Following' : 'Follow'}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </section>
           </GradientBorder>
         </section>
