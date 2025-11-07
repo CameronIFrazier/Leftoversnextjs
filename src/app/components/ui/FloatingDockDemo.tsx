@@ -24,7 +24,7 @@ export function FloatingDockDemo() {
       icon: (
         <IconHome className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-      href: "https://leftoversnextjs-pyhl.vercel.app/",
+      href: "https://leftoversnextjs-qebo.vercel.app/",
     },
     {
       title: "Creat new Post",
@@ -73,14 +73,7 @@ export function FloatingDockDemo() {
       ),
       href: "/feedPage",
     },
-    {
-      title: "DMSAMPLE",
-      icon: (
-        <IconEdit className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-      ),
-      href: "/DM",
-      
-    }
+    
 
     
   ];
