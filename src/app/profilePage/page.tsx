@@ -3,6 +3,8 @@ import React, { useState, useEffect, use } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 import LoadingDots from "../components/ui/LoadingDots";
 import GradientBorder from "../components/ui/GradientBorder";
+import { SponsorsList } from "../components/ui/SponsorsList";
+import { PeopleYouMayKnow } from "../components/ui/PeopleYouMayKnow";
 import { IconEdit, IconPhoto, IconTrash } from "@tabler/icons-react";
 interface Post {
   id: number;
@@ -24,18 +26,7 @@ export default function ProfilePage() {
   const [isEditMode, setIsEditMode] = useState(false); // 🔹 NEW — edit mode state
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 🔹 NEW — toast notification
   const [toastVisible, setToastVisible] = useState(false); // 🔹 NEW — toast visibility for fade animation
-  // Suggestions state for "People you may know"
-  interface SuggestionItem {
-    id: number | string;
-    name: string;
-    handle?: string;
-    mutuals?: number;
-    avatar?: string | null;
-    username?: string;
-  }
-
-  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
-  const [following, setFollowing] = useState<Record<string, boolean>>({});
+  const [isCreatingPost, setIsCreatingPost] = useState(false); // 🔹 NEW — post creation loading state
 
   useEffect(() => {
     // Add click outside listener to turn off edit mode
@@ -117,34 +108,6 @@ export default function ProfilePage() {
           const dataPosts = await resPosts.json();
           setPosts(dataPosts);
         }
-        // Fetch suggestions from /api/users and pick up to 5 random users (exclude current)
-        try {
-          const resUsers = await fetch('/api/users');
-          const usersJson = await resUsers.json();
-          const allUsers = usersJson.users || [];
-
-          // Filter out current user by username (if available)
-          const candidates = allUsers.filter((u: any) => u.username !== dataUser.userName);
-
-          // Shuffle (Fisher-Yates)
-          for (let i = candidates.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-          }
-
-          const picked = candidates.slice(0, 5).map((u: any) => ({
-            id: u.id,
-            name: u.name || `${u.firstname || ''} ${u.lastname || ''}`.trim() || u.username,
-            handle: u.username,
-            avatar: u.avatar || u.profile_pic || null,
-            mutuals: 0,
-            username: u.username,
-          }));
-
-          setSuggestions(picked);
-        } catch (e) {
-          console.error('Failed to load suggestions:', e);
-        }
       } catch (err) {
         console.error("Failed to fetch user data:", err);
       }
@@ -184,6 +147,9 @@ export default function ProfilePage() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
+    // Start loading state
+    setIsCreatingPost(true);
+
     const media_url = media ? URL.createObjectURL(media) : null;
 
     // 🔹 Optional: temporary media handling (can later integrate real upload)
@@ -217,9 +183,19 @@ export default function ProfilePage() {
         setTimeout(() => {
           const postsSection = document.getElementById("past-post");
           if (postsSection) {
-            postsSection.scrollIntoView({ behavior: "smooth" });
+            // Get the posts section's position
+            const rect = postsSection.getBoundingClientRect();
+            const absoluteTop = window.pageYOffset + rect.top;
+            
+            // Add some offset to show the title and part of the first post
+            const offset = 150;
+            
+            window.scrollTo({
+              top: absoluteTop - offset,
+              behavior: "smooth"
+            });
           }
-        }, 200); // Small delay to ensure DOM updates are complete
+        }, 800); // Slower delay for better UX
         
         showToast("Post created successfully!");
       } else {
@@ -227,6 +203,9 @@ export default function ProfilePage() {
       }
     } catch (err) {
       showToast("Error creating post.");
+    } finally {
+      // End loading state
+      setIsCreatingPost(false);
     }
   };
 
@@ -241,10 +220,11 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="sticky top-0 z-50 w-full bg-black backdrop-blur-md border-b border-gray-700 flex px-6 items-center ">
-        <FloatingDockDemo />
+      <div className="sticky top-0 z-50 w-full bg-black/95 border-b border-gray-700 flex px-6 items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Profile Page</h1>
+            <FloatingDockDemo />
       </div>
-      <section className="w-[98%] flex flex-row items-start justify-center pb-5 pt-5">
+            <section className="w-[98%] flex flex-row items-start justify-center pb-5 pt-5">
         {/* Left side */}
         <section className="w-[60%] h-auto pr-5">
           {/* Profile box */}
@@ -368,7 +348,7 @@ export default function ProfilePage() {
           </section>
 
           {/* 🔹 Post Creation Section */}
-          <section className="h-auto rounded-lg mt-5 flex flex-col p-4 bg-black">
+          <section className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm mt-5 flex flex-col">
             <h1 className="text-lg font-semibold mb-3">New Post</h1>
             <input
               value={title}
@@ -402,16 +382,21 @@ export default function ProfilePage() {
             
             <button
               onClick={handleCreatePost}
-              className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
+              disabled={isCreatingPost}
+              className={`mt-2 px-4 py-2 rounded-xl text-white w-auto self-center transition-colors ${
+                isCreatingPost 
+                  ? 'bg-gray-600 cursor-not-allowed' 
+                  : 'bg-indigo-500 hover:bg-gradient-to-b from-indigo-500 to-purple-500'
+              }`}
             >
-              Create Post
+              {isCreatingPost ? <LoadingDots /> : 'Create Post'}
             </button>
           </section>
 
-              {/* Divider */}
-            <div className="my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
+              {/* Divider
+            <div className="my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div> */}
           {/* 🔹 Past Posts Section */}
-          <section id="past-post" className="h-auto rounded-lg mt-5 flex flex-col items-center justify-start bg-black p-4">
+          <section id="past-post" className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm mt-5 flex flex-col items-center justify-start">
             <h1 className="text-2xl font-bold mb-4 text-white-300">Posts History</h1>
             <div className="w-full flex flex-col gap-4">
               {posts.length === 0 ? (
@@ -452,43 +437,12 @@ export default function ProfilePage() {
         </section>
 
         {/* Right side */}
-        <section className="w-[20%] h-auto bg-black flex flex-col">
-          <GradientBorder>
-            <section className="h-[1020px] rounded-lg flex flex-col items-center justify-start bg-black p-4">
-              <h1 className="mb-5 text-purple-300 font-bold">People you may know</h1>
-              <div className="w-[90%] h-[90%] bg-indigo-900 rounded-lg p-3 overflow-auto">
-                <ul className="space-y-3">
-                  {suggestions.map((s) => (
-                    <li key={s.id} className="flex items-center justify-between gap-3 p-2 rounded-md bg-black/20">
-                      <div className="flex items-center gap-3">
-                        {s.avatar ? (
-                          <img src={s.avatar} alt={`${s.name} avatar`} className="w-10 h-10 rounded-full object-cover" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-indigo-700 flex items-center justify-center text-sm font-semibold text-white">
-                            {s.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">{s.name}</span>
-                          <span className="text-xs text-purple-300">@{s.handle ?? s.name.toLowerCase().replace(/\s+/g,'')}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end">
-                        <span className="text-xs text-purple-300">{s.mutuals ? `${s.mutuals} mutuals` : 'New'}</span>
-                        <button
-                          onClick={() => setFollowing((f) => ({ ...f, [String(s.id)]: !f[String(s.id)] }))}
-                          className={`mt-2 px-3 py-1 rounded-full text-sm font-medium ${following[String(s.id)] ? 'bg-gray-700 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
-                        >
-                          {following[String(s.id)] ? 'Following' : 'Follow'}
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </section>
-          </GradientBorder>
+        <section className="w-[20%] h-auto bg-black flex flex-col gap-4">
+          {/* Sponsors Section */}
+          <SponsorsList />
+          
+          {/* People You May Know Section */}
+          <PeopleYouMayKnow />
         </section>
       </section>
     </section>
