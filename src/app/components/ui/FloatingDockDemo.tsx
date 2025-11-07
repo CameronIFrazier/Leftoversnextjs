@@ -23,11 +23,11 @@ export function FloatingDockDemo() {
       href: "https://leftoversnextjs-qebo.vercel.app/",
     },
     {
-      title: "Creat new Post",
+      title: "Create new Post",
       icon: (
         <IconNewSection className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-  href: "/ProfilePage",
+      href: "/profilePage",
     },
     {
       title: "Sponsors",
@@ -54,14 +54,14 @@ export function FloatingDockDemo() {
       href: "/InboxPage",
       
     },
-        {
+    {
       title: "Profile",
       icon: (
         <IconUser className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-  href: "/ProfilePage",
-      
+      href: "/profilePage",
     },
+    
     {
       title: "Feed",
       icon: (
