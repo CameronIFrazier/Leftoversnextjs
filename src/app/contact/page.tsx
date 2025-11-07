@@ -1,10 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { NavbarDemo } from "../components/ui/NavbarDemo";
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-900 to-black p-4">
+    <section className="min-h-screen bg-black">
+      <NavbarDemo />
+    <div className="min-h-screen flex items-center justify-center bg-black p-4">
       <Card className="w-full max-w-2xl p-8 space-y-8 bg-black/50 backdrop-blur-sm border-neutral-800">
         <div className="space-y-4">
           <h1 className="text-3xl font-bold text-white text-center">Contact Us</h1>
@@ -16,7 +19,7 @@ export default function ContactPage() {
             <div>
               <a
                 href="mailto:inquire@leftovers.org"
-                className="text-blue-500 hover:text-blue-400"
+                className="text-purple-500 hover:text-purple-400"
               >
                 inquire@leftovers.org
               </a>
@@ -72,19 +75,20 @@ export default function ContactPage() {
             <textarea
               id="message"
               placeholder="Type your message here..."
-              className="w-full min-h-[150px] p-3 rounded-md bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full min-h-[150px] p-3 rounded-md bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition duration-200"
+            className="w-full py-2 px-4 bg-indigo-500 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white font-bold rounded-md transition duration-200"
           >
             Submit Inquiry
           </button>
         </form>
       </Card>
     </div>
+    </section>
   );
 }

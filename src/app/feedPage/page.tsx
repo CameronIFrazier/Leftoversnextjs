@@ -1,6 +1,8 @@
 "use client";
+/// <reference types="react" />
 import React, { useState, useEffect, useMemo } from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
+import { LoadingDots } from "../components/ui/LoadingDots";
 
 interface Post {
   id: number;
@@ -91,7 +93,7 @@ function SponsorsList({ sponsors }: { sponsors: Sponsor[] }) {
         <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">Random 3</span>
       </div>
       <ul className="space-y-3">
-        {randomThree.map((s) => (
+  {randomThree.map((s: Sponsor) => (
           <li key={s.id} className="group">
             <a
               href={s.href ?? "#"}
@@ -125,7 +127,7 @@ function SponsorsList({ sponsors }: { sponsors: Sponsor[] }) {
 function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
   return (
     // inner aside should be full width of its parent column — width is controlled by the wrapper
-    <aside className="sticky top-4 flex w-full flex-col gap-4">
+    <aside className="sticky top-24 flex w-full flex-col gap-4 py-10">
       <MiniProfile user={user} />
       <SponsorsList sponsors={sponsors} />
     </aside>
@@ -134,17 +136,7 @@ function RightSidebar({ user, sponsors }: { user: User; sponsors: Sponsor[] }) {
 
 // Top-level, memoized CommentItem to avoid remounting on parent renders.
 // It receives all handlers and lookup function as props to stay pure.
-const CommentItem = React.memo(function CommentItemComponent({
-  comment,
-  postId,
-  depth = 0,
-  getReplies,
-  replyingTo,
-  setReplyingTo,
-  replyInputs,
-  setReplyInputs,
-  handleReplySubmit,
-}: {
+interface CommentItemProps {
   comment: Comment;
   postId: number;
   depth?: number;
@@ -154,7 +146,21 @@ const CommentItem = React.memo(function CommentItemComponent({
   replyInputs: { [key: number]: string };
   setReplyInputs: React.Dispatch<React.SetStateAction<{ [key: number]: string }>>;
   handleReplySubmit: (postId: number, parentId: number) => Promise<void>;
-}) {
+  // Allow React `key` attribute to be passed in JSX without type errors
+  key?: React.Key;
+}
+
+function CommentItemComponent({
+  comment,
+  postId,
+  depth = 0,
+  getReplies,
+  replyingTo,
+  setReplyingTo,
+  replyInputs,
+  setReplyInputs,
+  handleReplySubmit,
+}: CommentItemProps) {
   const children = getReplies(comment.id);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -166,7 +172,7 @@ const CommentItem = React.memo(function CommentItemComponent({
   }, [replyingTo, comment.id]);
 
   return (
-    <div className={`bg-indigo-${800 - Math.min(depth * 50, 400)} rounded-lg p-2 mb-2`}>
+    <div className={`${depth > 0 ? 'border-l-2 border-l-indigo-400 pl-4 ml-2' : ''} rounded-lg p-2 mb-2`}>
       <div className="flex items-start gap-3">
         {comment.avatar ? (
           <img
@@ -198,17 +204,17 @@ const CommentItem = React.memo(function CommentItemComponent({
             Reply
           </button>
 
-          {replyingTo === comment.id && (
+                {replyingTo === comment.id && (
             <div className="mt-2 flex gap-2 items-center">
               <input
                 ref={inputRef}
                 type="text"
                 value={replyInputs[comment.id] || ""}
-                onChange={(e) => setReplyInputs((prev) => ({ ...prev, [comment.id]: e.target.value }))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReplyInputs((prev: { [key: number]: string }) => ({ ...prev, [comment.id]: e.target.value }))}
                 placeholder="Write a reply..."
-                className="flex-grow rounded-lg p-2 text-black"
+                className="flex-grow rounded-lg p-2 text-indigo-200"
               />
-              <button type="button" onClick={() => handleReplySubmit(postId, comment.id)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">
+              <button type="button" onClick={() => handleReplySubmit(postId, comment.id)} className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg">
                 Send
               </button>
             </div>
@@ -216,7 +222,7 @@ const CommentItem = React.memo(function CommentItemComponent({
 
           {children.length > 0 && (
             <div className="ml-5 mt-2 space-y-1">
-              {children.map((child) => (
+              {children.map((child: Comment) => (
                 <CommentItem key={child.id} comment={child} postId={postId} depth={depth + 1} getReplies={getReplies} replyingTo={replyingTo} setReplyingTo={setReplyingTo} replyInputs={replyInputs} setReplyInputs={setReplyInputs} handleReplySubmit={handleReplySubmit} />
               ))}
             </div>
@@ -225,7 +231,8 @@ const CommentItem = React.memo(function CommentItemComponent({
       </div>
     </div>
   );
-});
+}
+const CommentItem = React.memo(CommentItemComponent) as React.MemoExoticComponent<React.FC<CommentItemProps>>;
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -233,59 +240,82 @@ export default function Home() {
   const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-   const user: User = {
-    name: "Eric Lee",
-    handle: "eric",
-    avatarUrl: "/pfp.png",
-  };
+  // Current logged-in user — will be populated from JWT-protected endpoints when available
+  const [user, setUser] = useState<User>({ name: "Guest", handle: undefined, avatarUrl: undefined });
 
 
    const sponsors: Sponsor[] = [
-    { id: "100t", name: "100 Thieves", description: "Gaming org based in LA", logoUrl: "/logos/100t.png", href: "/sponsors/100t" },
-    { id: "liquid", name: "Team Liquid", description: "Global esports team", logoUrl: "/logos/tl.png", href: "/sponsors/team-liquid" },
-    { id: "sentinels", name: "Sentinels", description: "Esports org from LA", logoUrl: "/logos/sen.png" },
-    { id: "c9", name: "Cloud9", description: "Esports org from NA", logoUrl: "/logos/c9.png" },
+    { id: "100t", name: "100 Thieves", description: "Gaming org based in LA", logoUrl: "/sponsors/100thieves.png", href: "/sponsors/100t" },
+    { id: "liquid", name: "Team Liquid", description: "Global esports team", logoUrl: "/sponsors/teamliquid.png", href: "/sponsors/team-liquid" },
+    { id: "sentinels", name: "Sentinels", description: "Esports org from LA", logoUrl: "/sponsors/sentinels.png" },
+    { id: "c9", name: "Cloud9", description: "Esports org from NA", logoUrl: "/sponsors/cloud9.png" },
     { id: "guard", name: "The Guard", description: "LA-based esports org" },
   ];
   // Fetch posts
   useEffect(() => {
     async function fetchPosts() {
-      const res = await fetch("/api/getFeed");
-      const data = await res.json();
-      // Normalize incoming post objects to ensure we have a `username` and `avatar` field
-      const normalized = (data || []).map((p: Record<string, unknown>) => {
-        const id = typeof p["id"] === "number" ? (p["id"] as number) : Number(p["id"]);
-        const title = p["title"] ? String(p["title"]) : "";
-        const description = p["description"] ? String(p["description"]) : "";
-        const media_url = (p["media_url"] ?? p["mediaUrl"] ?? null) as string | null;
-        const created_at = (p["created_at"] ?? p["createdAt"] ?? null) as string | null;
-        const username = (p["username"] ?? p["userName"] ?? p["user_name"] ?? p["name"] ?? null) as string | null;
-        const avatar = (p["avatar"] ?? p["profile_pic"] ?? p["profilePic"] ?? null) as string | null;
-        return { id, title, description, media_url, created_at, username, avatar };
-      });
+      try {
+        const res = await fetch("/api/getFeed");
+        const data = await res.json();
+        // Normalize incoming post objects to ensure we have a `username` and `avatar` field
+        const normalized = (data || []).map((p: Record<string, unknown>) => {
+          const id = typeof p["id"] === "number" ? (p["id"] as number) : Number(p["id"]);
+          const title = p["title"] ? String(p["title"]) : "";
+          const description = p["description"] ? String(p["description"]) : "";
+          const media_url = (p["media_url"] ?? p["mediaUrl"] ?? null) as string | null;
+          const created_at = (p["created_at"] ?? p["createdAt"] ?? null) as string | null;
+          const username = (p["username"] ?? p["userName"] ?? p["user_name"] ?? p["name"] ?? null) as string | null;
+          const avatar = (p["avatar"] ?? p["profile_pic"] ?? p["profilePic"] ?? null) as string | null;
+          return { id, title, description, media_url, created_at, username, avatar };
+        });
 
-      setPosts(normalized);
+        setPosts(normalized);
+      } catch (error) {
+  
+        console.error('Error fetching posts:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
     fetchPosts();
   }, []);
 
   // Fetch current user's username (if logged in) so we can include it when posting comments
+  // Fetch current user's username and profile picture (if logged in)
   useEffect(() => {
-    async function fetchCurrentUserName() {
+    async function fetchCurrentUserProfile() {
       if (typeof window === 'undefined') return;
       const token = localStorage.getItem('token');
       if (!token) return;
+
       try {
-        const res = await fetch('/api/getUserName', { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.userName) setCurrentUserName(data.userName);
+        // fetch username
+        const nameRes = await fetch('/api/getUserName', { headers: { Authorization: `Bearer ${token}` } });
+        if (nameRes.ok) {
+          const nameData = await nameRes.json();
+          if (nameData.userName) {
+            setCurrentUserName(nameData.userName);
+            setUser((prev: User) => ({ ...prev, name: nameData.userName }));
+          }
+        }
+
+        // fetch profile picture
+        const pfpRes = await fetch('/api/getUserPfp', { headers: { Authorization: `Bearer ${token}` } });
+        if (pfpRes.ok) {
+          const pfpData = await pfpRes.json();
+          // server returns { profilePic: ... }
+          if (pfpData && pfpData.profilePic) {
+            setUser((prev: User) => ({ ...prev, avatarUrl: pfpData.profilePic }));
+          }
+        }
       } catch (err) {
-        console.error('Failed to fetch current username:', err);
+        console.error('Failed to fetch current user profile:', err);
       }
     }
-    fetchCurrentUserName();
+
+    fetchCurrentUserProfile();
   }, []);
 //force
   // Fetch comments
@@ -316,7 +346,7 @@ export default function Home() {
     if (!comment?.trim()) return;
 
     await addCommentToDB(postId, comment);
-    setNewComments((prev) => ({ ...prev, [postId]: "" }));
+    setNewComments((prev: { [key: number]: string }) => ({ ...prev, [postId]: "" }));
   };
 
   // Submit a reply
@@ -325,7 +355,7 @@ export default function Home() {
     if (!replyText?.trim()) return;
 
     await addCommentToDB(postId, replyText, parentId);
-    setReplyInputs((prev) => ({ ...prev, [parentId]: "" }));
+    setReplyInputs((prev: { [key: number]: string }) => ({ ...prev, [parentId]: "" }));
     setReplyingTo(null);
   };
 
@@ -360,58 +390,63 @@ export default function Home() {
 
   // Filter top-level comments
   const getTopLevelComments = (postId: number) =>
-    comments.filter((c) => c.post_id === postId && c.parent_comment_id === null);
+    comments.filter((c: Comment) => c.post_id === postId && c.parent_comment_id === null);
 
   // Get replies for a comment
   const getReplies = (parentId: number) =>
-    comments.filter((c) => c.parent_comment_id === parentId);
+    comments.filter((c: Comment) => c.parent_comment_id === parentId);
 
   
 
   return (
-    <div className="h-full w-full flex justify-center bg-black text-white p-6">
-      {/**Left Side content */}
-<aside className="hidden lg:flex lg:w-1/4">
-        <div className="sticky top-4 w-full">
-          <MiniProfile user={user} />
-        </div>
-      </aside>
-      {/**Main feed Section */}
-      <section className="h-auto w-[40%] mt-5 flex flex-col items-center justify-start bg-black p-8">
-        <FloatingDockDemo></FloatingDockDemo>
-        <h1 className="text-2xl font-bold mb-4 text-white">Feed</h1>
-
-        <div className="w-full flex flex-col gap-4">
-          {posts.map((post) => (
-            <div key={post.id} className="rounded-lg p-3 bg-indigo-900 text-white">
-              <div className="flex items-center gap-3 mb-2">
-                {post.avatar ? (
-                  <img src={post.avatar} alt={`${post.username || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
-                )}
-                <div className="flex flex-col">
-                  {post.username && <div className="text-sm text-gray-200">@{post.username}</div>}
-                  {post.created_at && (
-                    <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
+    <div className="h-full w-full bg-black text-white min-h-screen">
+      {/* Sticky Navbar */}
+      <div className="sticky top-0 z-50 w-full bg-black/95 border-b border-gray-700 flex px-6 items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Feed Page</h1>
+            <FloatingDockDemo />
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex justify-center p-6 pt-6">      
+        {/**Main feed Section */}
+        <section className="w-[60%] flex flex-col items-center justify-start bg-black">
+          <div className="w-full flex flex-col gap-4">
+          {isLoading ? (
+            <LoadingDots />
+          ) : (
+            posts.map((post) => (
+            <div key={post.id} className="rounded-lg border border-gray-700 p-4 mb-6">
+              {/* Post Content */}
+              <div className="rounded-lg p-3 bg-indigo-900 text-white mb-3">
+                <div className="flex items-center gap-3 mb-2">
+                  {post.avatar ? (
+                    <img src={post.avatar} alt={`${post.username || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
                   )}
+                  <div className="flex flex-col">
+                    {post.username && <div className="text-base text-gray-200 font-bold">{post.username}</div>}
+                    {post.created_at && (
+                      <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <h2 className="font-bold text-lg">{post.title}</h2>
-              <p>{post.description}</p>
+                <h2 className="font-bold text-base">{post.title}</h2>
+                <p className="text-sm text-gray-200">{post.description}</p>
 
-              {post.media_url && (
-                <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
-              )}
+                {post.media_url && (
+                  <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
+                )}
+              </div>
 
               {/* Comments Section */}
-              <div className="mt-3">
+              <div className="mt-3"> 
                 <h3 className="font-semibold mb-2">Comments</h3>
 
                 {getTopLevelComments(post.id).length === 0 ? (
                   <p className="text-gray-300 text-sm">No comments yet.</p>
                 ) : (
-                  getTopLevelComments(post.id).map((c) => (
+                  getTopLevelComments(post.id).map((c: Comment) => (
                     <CommentItem
                       key={c.id}
                       comment={c}
@@ -428,7 +463,7 @@ export default function Home() {
 
                 {/* Add Comment Form */}
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
                     e.preventDefault();
                     handleCommentSubmit(post.id);
                   }}
@@ -437,32 +472,34 @@ export default function Home() {
                   <input
                     type="text"
                     value={newComments[post.id] || ""}
-                    onChange={(e) =>
-                      setNewComments((prev) => ({
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setNewComments((prev: { [key: number]: string }) => ({
                         ...prev,
                         [post.id]: e.target.value,
                       }))
                     }
                     placeholder="Write a comment..."
-                    className="flex-grow rounded-lg p-2 text-black"
+                    className="flex-grow rounded-lg p-2 text-white bg-indigo-800/30 focus:outline-none focus:border-indigo-400"
                   />
                   <button
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+                    className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg"
                   >
                     Post
                   </button>
                 </form>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-      {/* Right Sidebar */}
-       <aside className="hidden lg:flex lg:w-1/4">
-        <RightSidebar user={user} sponsors={sponsors} />
-      </aside>
-
+          ))
+          )}
+            </div>
+          </section>
+        
+        {/* Right Sidebar */}
+        <aside className="hidden lg:flex lg:w-1/4 pl-10 sticky top-24 self-start">
+          <RightSidebar user={user} sponsors={sponsors} />
+        </aside>
+      </div>
     </div>
   );
 }

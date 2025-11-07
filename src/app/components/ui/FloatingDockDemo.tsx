@@ -24,7 +24,7 @@ export function FloatingDockDemo() {
       icon: (
         <IconHome className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
-      href: "https://leftoversnextjs-pyhl.vercel.app/",
+      href: "https://leftoversnextjs-qebo.vercel.app/",
     },
     {
       title: "Creat new Post",
@@ -52,14 +52,8 @@ export function FloatingDockDemo() {
     {
       title: "Inbox",
       icon: (
-        <Image
-          src="/inbox-svgrepo-com.svg"            
-          alt="Inbox"
-          width={32}
-          height={32}
-          className="h-full w-full object-contain scale-125"
-          priority
-        />
+        <IconInbox className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+
       ),
       href: "/InboxPage",
       
@@ -78,12 +72,13 @@ export function FloatingDockDemo() {
         <IconNotebook className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "/feedPage",
-    }
+    },
+    
 
     
   ];
   return (
-    <div className="flex items-center justify-center w-[50%]">
+    <div className="flex items-center justify-center">
       <FloatingDock
         mobileClassName="translate-y-20" // only for demo, remove for production
         items={links}

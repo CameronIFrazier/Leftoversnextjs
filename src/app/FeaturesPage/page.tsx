@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
+import { NavbarDemo } from "../components/ui/NavbarDemo";
 
 type Feature = {
     name: string;
@@ -55,7 +56,7 @@ function FeatureCard({ feature }: { feature: Feature }) {
 export default function FeaturesPage() {
     return (
         <section className="min-h-screen bg-black text-white py-16 px-6 flex flex-col items-center">
-            <FloatingDockDemo></FloatingDockDemo>
+            <NavbarDemo />
             <div className="max-w-3xl mx-auto text-center mb-12">
                 
                 <h1 className="text-4xl font-bold text-indigo-400">Features</h1>
