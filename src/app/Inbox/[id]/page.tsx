@@ -1,4 +1,6 @@
+"use client";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 type ThreadMessage = {
 	id: string;
@@ -18,17 +20,25 @@ const THREADS: Record<string, ThreadMessage[]> = {
 };
 
 export default function ConversationPage(props: any) {
+	const router = useRouter();
 	const params = props?.params;
 	const id = params?.id ?? '1';
 	const thread = THREADS[id] ?? [];
 
+	const handleBackClick = () => {
+		router.push('/InboxPage');
+	};
+
 	return (
 		<section className="min-h-screen bg-black text-white p-6">
 			<div className="max-w-3xl mx-auto">
-				<Link className="text-sm text-purple-300 mb-4 inline-block" href="/Inbox">← Back</Link>
-				<h2 className="text-2xl font-bold mb-4">Conversation — #{id}</h2>
-
-				<div className="space-y-4 mb-8">
+				<button 
+					onClick={handleBackClick}
+					className="text-sm text-purple-300 mb-4 inline-block hover:text-purple-200 transition-colors cursor-pointer"
+				>
+					← Back
+				</button>
+				<h2 className="text-2xl font-bold mb-4">Conversation — #{id}</h2>				<div className="space-y-4 mb-8">
 					{thread.map((m) => (
 						<div key={m.id} className={`p-3 rounded-md ${m.from === 'You' ? 'bg-purple-800 self-end' : 'bg-indigo-900'}`}>
 							<div className="text-sm font-semibold text-purple-200">{m.from}</div>
