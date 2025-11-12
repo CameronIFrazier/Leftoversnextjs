@@ -70,6 +70,7 @@ function MiniProfile({ user }: { user: User }) {
   );
 }
 
+
 function SponsorsList({ sponsors }: { sponsors: Sponsor[] }) {
   // Choose a deterministic initial set for SSR, then reshuffle on the client
   const initialThree = useMemo(() => pickRandomSponsors(sponsors, 3), [sponsors]);
@@ -241,6 +242,53 @@ export default function Home() {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [likes, setLikes] = useState<{ [key: number]: number }>({});
+const [userLikedPosts, setUserLikedPosts] = useState<number[]>([]);
+
+const handleLikeToggle = async (postId: number) => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("You must be logged in to like posts.");
+    return;
+  }
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const userId = payload.id; 
+
+    if (!userId) {
+      console.error("Cannot like post: userId is undefined");
+      return;
+    }
+
+    const res = await fetch("/api/like", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, postId }),
+    });
+
+    if (!res.ok) {
+      console.error("Error liking post:", await res.text());
+      return;
+    }
+
+    const { liked } = await res.json();
+
+    // Update local state
+    setLikes((prev) => ({
+      ...prev,
+      [postId]: liked ? (prev[postId] || 0) + 1 : Math.max((prev[postId] || 1) - 1, 0),
+    }));
+
+    setUserLikedPosts((prev) =>
+      liked ? [...prev, postId] : prev.filter((id) => id !== postId)
+    );
+  } catch (err) {
+    console.error("Failed to toggle like:", err);
+  }
+};
+
+
 
   // Current logged-in user — will be populated from JWT-protected endpoints when available
   const [user, setUser] = useState<User>({ name: "Guest", handle: undefined, avatarUrl: undefined });
@@ -317,6 +365,42 @@ export default function Home() {
 
     fetchCurrentUserProfile();
   }, []);
+  
+useEffect(() => {
+  async function fetchLikes() {
+    try {
+      const res = await fetch("/api/getLikes");
+      const data = await res.json(); // [{ postId, likeCount, userIds }, ...]
+
+      const likeCount: { [key: number]: number } = {};
+      const likedPosts: number[] = [];
+      const token = localStorage.getItem("token");
+      let userId: number | null = null;
+
+      if (token) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        userId = Number(payload.id);
+      }
+
+      data.forEach((row: { postId: number; likeCount: number; userIds: number[] }) => {
+        likeCount[row.postId] = row.likeCount;
+
+        if (userId !== null && row.userIds.includes(userId)) {
+          likedPosts.push(row.postId);
+        }
+      });
+
+      setLikes(likeCount);
+      setUserLikedPosts(likedPosts);
+    } catch (err) {
+      console.error("Failed to fetch likes:", err);
+    }
+  }
+
+  fetchLikes();
+}, []);
+
+
 //force
   // Fetch comments
   useEffect(() => {
@@ -438,7 +522,22 @@ export default function Home() {
                   <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
                 )}
               </div>
-
+{/* Like Button Section */}
+<div className="flex items-center gap-3 mb-3">
+  <button
+    onClick={() => handleLikeToggle(post.id)}
+    className={`px-3 py-1 rounded-lg font-semibold ${
+      userLikedPosts.includes(post.id)
+        ? "bg-purple-600 text-white"
+        : "bg-indigo-600 text-white hover:bg-indigo-500"
+    }`}
+  >
+    {userLikedPosts.includes(post.id) ? "❤️ Liked" : "🤍 Like"}
+  </button>
+  <span className="text-sm text-gray-300">
+    {likes[post.id] || 0} {likes[post.id] === 1 ? "like" : "likes"}
+  </span>
+</div>
               {/* Comments Section */}
               <div className="mt-3"> 
                 <h3 className="font-semibold mb-2">Comments</h3>

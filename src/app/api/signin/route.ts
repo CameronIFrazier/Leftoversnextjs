@@ -2,7 +2,7 @@ import mysql, { RowDataPacket } from "mysql2/promise";
 import jwt from "jsonwebtoken";
 
 export async function POST(req: Request) {
-   console.log("JWT_SECRET:", process.env.JWT_SECRET);
+  console.log("JWT_SECRET:", process.env.JWT_SECRET);
   try {
     const { email, password } = await req.json();
 
@@ -28,21 +28,23 @@ export async function POST(req: Request) {
       );
     }
 
-    //  User found — create a JWT containing their email
-    const token = jwt.sign(
-      { email }, // payload
-      process.env.JWT_SECRET!, // secret key
-      
-      { expiresIn: "7d" } // optional expiration time
-    );
-    
+    const user = rows[0];
 
-    //  Return token to frontend
+    // Include numeric user ID in JWT
+    const token = jwt.sign(
+      {
+        id: user.id,       // numeric ID
+        email: user.email, // optional, for convenience
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: "7d" }
+    );
+
     return new Response(
       JSON.stringify({
         success: true,
         message: "Signed in!",
-        token, // frontend can store this
+        token,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
