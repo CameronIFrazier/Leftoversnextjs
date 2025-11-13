@@ -13,12 +13,22 @@ interface Post {
    media_url?: string | null;
   created_at?: string;
 }
+interface Comment {
+  id: number;
+  post_id: number;
+  comment_text: string;
+  parent_comment_id: number | null;
+  created_at?: string | null;
+  username?: string | null;
+  avatar?: string | null;
+}
 export default function ProfilePage() {
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [highlight, setHighlight] = useState<string | null>(null);
   const [userName, setuserName] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]); // 🔹 NEW — store all posts
+  const [comments, setComments] = useState<Comment[]>([]); // comments for all posts
   const [title, setTitle] = useState(""); // 🔹 NEW — new post title
   const [description, setDescription] = useState(""); // 🔹 NEW — new post desc
   const [media, setMedia] = useState<File | null>(null); // 🔹 NEW — new post file
@@ -107,6 +117,16 @@ export default function ProfilePage() {
           );
           const dataPosts = await resPosts.json();
           setPosts(dataPosts);
+        }
+        // 🔹 Fetch comments for user's posts (all comments; we'll filter client-side)
+        try {
+          const resComments = await fetch('/api/getComments');
+          if (resComments.ok) {
+            const dataComments = await resComments.json();
+            setComments(dataComments);
+          }
+        } catch (err) {
+          console.error('Failed to fetch comments:', err);
         }
       } catch (err) {
         console.error("Failed to fetch user data:", err);
@@ -208,6 +228,53 @@ export default function ProfilePage() {
       setIsCreatingPost(false);
     }
   };
+
+  // ----- Comments handling (for posts on this profile) -----
+  const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
+  const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+
+  const addCommentToDB = async (postId: number, comment: string, parentCommentId: number | null = null) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+      await fetch("/api/addComment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ postId, comment, parentCommentId, username: userName }),
+      });
+
+      // reload comments
+      const fetched = await (await fetch("/api/getComments")).json();
+      setComments(fetched);
+    } catch (err) {
+      console.error("Failed to add comment:", err);
+    }
+  };
+
+  const handleCommentSubmit = async (postId: number) => {
+    const comment = newComments[postId];
+    if (!comment?.trim()) return;
+
+    await addCommentToDB(postId, comment);
+    setNewComments((prev: { [key: number]: string }) => ({ ...prev, [postId]: "" }));
+  };
+
+  const handleReplySubmit = async (postId: number, parentId: number) => {
+    const replyText = replyInputs[parentId];
+    if (!replyText?.trim()) return;
+
+    await addCommentToDB(postId, replyText, parentId);
+    setReplyInputs((prev: { [key: number]: string }) => ({ ...prev, [parentId]: "" }));
+    setReplyingTo(null);
+  };
+
+  const getTopLevelComments = (postId: number) =>
+    comments.filter((c: Comment) => c.post_id === postId && c.parent_comment_id === null);
+
+  const getReplies = (parentId: number) =>
+    comments.filter((c: Comment) => c.parent_comment_id === parentId);
+
 
   return (
     <section className="w-full flex flex-col items-center bg-black text-white">
@@ -403,10 +470,7 @@ export default function ProfilePage() {
                 <LoadingDots />
               ) : (
                 posts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="-500 rounded-lg p-3 bg-indigo-900"
-                  >
+                  <div key={post.id} className="-500 rounded-lg p-3 bg-indigo-900">
                     <div className="flex items-center gap-3 mb-1">
                       {profilePic ? (
                         <img src={profilePic} alt={`${userName || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
@@ -423,12 +487,68 @@ export default function ProfilePage() {
                     <h2 className="font-bold">{post.title}</h2>
                     <p>{post.description}</p>
                     {post.media_url && (
-                      <img
-                        src={post.media_url}
-                        alt="Post media"
-                        className="mt-2 rounded-lg"
-                      />
+                      <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
                     )}
+
+                    {/* Comments for this post */}
+                    <div className="mt-4">
+                      <h3 className="text-sm font-semibold mb-2">Comments</h3>
+                      {getTopLevelComments(post.id).length === 0 ? (
+                        <p className="text-gray-300 text-sm">No comments yet.</p>
+                      ) : (
+                        getTopLevelComments(post.id).map((c) => (
+                          <div key={c.id} className="mb-2">
+                            <div className="flex items-start gap-2">
+                              {c.avatar ? (
+                                <img src={c.avatar} alt={`${c.username || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
+                              )}
+                              <div className="flex-1">
+                                <div className="text-sm font-semibold">{c.username ?? 'Unknown'}</div>
+                                <div className="text-xs text-gray-400">{c.created_at ? new Date(c.created_at).toLocaleString() : ''}</div>
+                                <div className="mt-1 text-white">{c.comment_text}</div>
+
+                                <button type="button" onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)} className="text-sm text-blue-400 hover:text-blue-300 mt-1">Reply</button>
+
+                                {replyingTo === c.id && (
+                                  <div className="mt-2 flex gap-2 items-center">
+                                    <input type="text" value={replyInputs[c.id] || ''} onChange={(e) => setReplyInputs((prev) => ({ ...prev, [c.id]: e.target.value }))} placeholder="Write a reply..." className="flex-grow rounded-lg p-2 text-black" />
+                                    <button type="button" onClick={() => handleReplySubmit(post.id, c.id)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">Send</button>
+                                  </div>
+                                )}
+
+                                {/* Render replies */}
+                                {getReplies(c.id).length > 0 && (
+                                  <div className="ml-8 mt-2 space-y-2">
+                                    {getReplies(c.id).map((r) => (
+                                      <div key={r.id} className="flex gap-2 items-start">
+                                        {r.avatar ? (
+                                          <img src={r.avatar} alt={`${r.username || 'user'} avatar`} className="w-6 h-6 rounded-full object-cover" />
+                                        ) : (
+                                          <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">@</div>
+                                        )}
+                                        <div>
+                                          <div className="text-sm font-semibold">{r.username ?? 'Unknown'}</div>
+                                          <div className="text-xs text-gray-400">{r.created_at ? new Date(r.created_at).toLocaleString() : ''}</div>
+                                          <div className="text-white">{r.comment_text}</div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+
+                      {/* Add Comment Form */}
+                      <form onSubmit={(e) => { e.preventDefault(); handleCommentSubmit(post.id); }} className="mt-3 flex gap-2 items-center">
+                        <input type="text" value={newComments[post.id] || ''} onChange={(e) => setNewComments((prev) => ({ ...prev, [post.id]: e.target.value }))} placeholder="Write a comment..." className="flex-grow rounded-lg p-2 text-black" />
+                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">Post</button>
+                      </form>
+                    </div>
                   </div>
                 ))
               )}
