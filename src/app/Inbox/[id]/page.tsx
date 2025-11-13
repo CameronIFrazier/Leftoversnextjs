@@ -119,27 +119,20 @@ export default function ConversationPage() {
         </div>
 
         {/* Input */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            sendMessage();
-          }}
-          className="mt-3 flex gap-2"
-        >
-          <input
-            type="text"
-            className="flex-grow rounded-lg p-2 text-white bg-indigo-800/30 focus:outline-none focus:border-indigo-400"
+        <div className="mt-3 border-t border-purple-700 pt-3 flex gap-2">
+          <textarea
+            className="flex-grow rounded-lg p-1 text-white bg-indigo-800/30 focus:outline-none focus:border-indigo-400 resize-none"
             placeholder={`Message ${userB}...`}
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
           />
           <button
-            type="submit"
-            className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg"
+            onClick={sendMessage}
+            className="bg-purple-600 px-2 py-2 rounded-lg hover:bg-purple-700"
           >
-            Post
+            Send
           </button>
-        </form>
+        </div>
       </div>
     </div>
   );
