@@ -37,6 +37,8 @@ export default function ProfilePage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 🔹 NEW — toast notification
   const [toastVisible, setToastVisible] = useState(false); // 🔹 NEW — toast visibility for fade animation
   const [isCreatingPost, setIsCreatingPost] = useState(false); // 🔹 NEW — post creation loading state
+    const [followersCount, setFollowersCount] = useState<number>(0);
+    const [followingCount, setFollowingCount] = useState<number>(0);
 
   useEffect(() => {
     // Add click outside listener to turn off edit mode
@@ -328,8 +330,28 @@ export default function ProfilePage() {
             >
               <IconEdit className="h-5 w-5" />
             </button>
-            
-            {/* Profile picture upload - only show in edit mode */}
+
+              <div className="flex items-center gap-4 mb-4">
+                  <button
+                      onClick={() => setIsEditMode(!isEditMode)}
+                      className={`p-2 rounded-full transition-colors ${
+                          isEditMode
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-gray-700 text-gray-300 hover:bg-purple-600 hover:text-white'
+                      }`}
+                      title={isEditMode ? "Exit edit mode" : "Edit profile"}
+                  >
+                      <IconEdit className="h-5 w-5" />
+                  </button>
+
+                  <div className="flex gap-2 text-white text-sm">
+                      <span><strong>{followersCount}</strong> Followers</span>
+                      <span><strong>{followingCount}</strong> Following</span>
+                  </div>
+              </div>
+
+
+              {/* Profile picture upload - only show in edit mode */}
             {isEditMode && (
               <div className="flex flex-col items-center gap-2 mb-4">
                 {/* Hidden file input */}
