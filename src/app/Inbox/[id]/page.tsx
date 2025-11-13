@@ -107,32 +107,39 @@ export default function ConversationPage() {
                 key={i}
                 className={`p-2 rounded-md max-w-[80%] ${
                   m.sender === currentUser
-                    ? "bg-purple-700 self-end ml-auto"
-                    : "bg-indigo-800 self-start"
+                    ? "bg-blue-700 self-end ml-auto" //sender bubble
+                    : "bg-red-800 self-start"  //receiver bubble
                 }`}
               >
                 <p>{m.message}</p>
-                <p className="text-xs text-gray-400 mt-1">{m.sender}</p>
+                <p className="text-xs text-gray-400 mt-1">{m.sender}</p> {/* username under the text message */}
               </div>
             ))
           )}
         </div>
 
         {/* Input */}
-        <div className="mt-3 border-t border-purple-700 pt-3 flex gap-2">
-          <textarea
-            className="flex-1 bg-indigo-900 border border-purple-700 rounded p-2 resize-none"
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendMessage();
+          }}
+          className="mt-3 flex gap-2"
+        >
+          <input
+            type="text"
+            className="flex-grow rounded-lg p-2 text-white bg-indigo-800/30 focus:outline-none focus:border-indigo-400"
             placeholder={`Message ${userB}...`}
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
           />
           <button
-            onClick={sendMessage}
-            className="bg-purple-600 px-4 py-2 rounded hover:bg-purple-700"
+            type="submit"
+            className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg"
           >
-            Send
+            Post
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

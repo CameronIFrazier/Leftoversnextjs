@@ -88,10 +88,12 @@ export default function InboxPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center py-8 relative">
-      <FloatingDockDemo />
-
+            {/* Sticky Navbar */}
+            <div className="sticky top-0 z-50 w-full bg-black/95 border-b border-gray-700 flex px-6 items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Inbox</h1>
+                  <FloatingDockDemo />
+            </div>
       <div className="w-full max-w-md flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Inbox</h1>
         <button
           onClick={openCompose}
           className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded"
