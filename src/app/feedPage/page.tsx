@@ -94,7 +94,6 @@ function MiniProfile({ user }: { user: User }) {
   );
 }
 
-
 function RightSidebar({ user }: { user: User }) {
   return (
     // inner aside should be full width of its parent column — width is controlled by the wrapper

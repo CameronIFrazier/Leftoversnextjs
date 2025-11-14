@@ -2,10 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
+import LoadingDots from "../components/ui/LoadingDots";
 
 interface Conversation {
   id: number;
   otherUser: string;
+  otherUserAvatar?: string;
   lastMessage: string;
   updatedAt: string;
 }
@@ -103,7 +105,10 @@ export default function InboxPage() {
       </div>
 
       {loading ? (
-        <p>Loading conversations...</p>
+        <div className=" flex flex-col"> 
+          <LoadingDots />
+          <p>Loading conversations...</p>
+        </div>
       ) : conversations.length === 0 ? (
         <p className="text-gray-400">No conversations yet.</p>
       ) : (
@@ -112,12 +117,28 @@ export default function InboxPage() {
             <li key={conv.id}>
               <button
                 onClick={() => router.push(`/Inbox/${conv.otherUser}`)}
-                className="w-full text-left bg-indigo-900 hover:bg-purple-800 p-3 rounded flex justify-between items-center"
+                className="w-full text-left border border-white/20 bg-black hover:bg-indigo-500 hover:border-indigo-500 p-3 rounded-2xl flex gap-3 items-center"
               >
-                <span>{conv.otherUser}</span>
-                <span className="text-xs text-gray-400 truncate w-32 text-right">
-                  {conv.lastMessage?.substring(0, 30) || ""}
-                </span>
+                {/* Avatar */}
+                {conv.otherUserAvatar ? (
+                  <img
+                    src={conv.otherUserAvatar}
+                    alt={conv.otherUser}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-sm flex-shrink-0">
+                    {conv.otherUser?.[0]?.toUpperCase() || "?"}
+                  </div>
+                )}
+                
+                {/* Username and Last Message */}
+                <div className="flex-1 min-w-0 flex justify-between items-center">
+                  <span>{conv.otherUser}</span>
+                  <span className="text-xs text-gray-400 truncate w-32 text-right ml-2">
+                    {conv.lastMessage?.substring(0, 30) || ""}
+                  </span>
+                </div>
               </button>
             </li>
           ))}
@@ -133,7 +154,7 @@ export default function InboxPage() {
             </h2>
 
             {loadingUsers ? (
-              <p>Loading users...</p>
+                <LoadingDots />
             ) : (
               <ul className="space-y-2 max-h-60 overflow-y-auto">
                 {users.length === 0 ? (
@@ -155,7 +176,7 @@ export default function InboxPage() {
 
             <button
               onClick={() => setShowCompose(false)}
-              className="mt-4 w-full bg-red-600 hover:bg-red-700 p-2 rounded"
+              className="mt-4 w-full round-lg bg-blue-600 hover:bg-red-700 p-2 rounded"
             >
               Cancel
             </button>

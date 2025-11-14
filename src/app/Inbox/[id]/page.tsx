@@ -92,11 +92,12 @@ export default function ConversationPage() {
           <a href="/InboxPage" className="text-purple-400">
             ← Back
           </a>
+
           <h2 className="text-lg font-semibold">{userB}</h2>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto border border-purple-700 rounded p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm p-4 space-y-3">
           {loading ? (
             <p>Loading conversation...</p>
           ) : messages.length === 0 ? (
@@ -107,8 +108,8 @@ export default function ConversationPage() {
                 key={i}
                 className={`p-2 rounded-md max-w-[80%] ${
                   m.sender === currentUser
-                    ? "bg-blue-700 self-end ml-auto" //sender bubble
-                    : "bg-red-800 self-start"  //receiver bubble
+                    ? "bg-indigo-500 self-end ml-auto" //sender bubble
+                    : "bg-blue-900 self-start"  //receiver bubble
                 }`}
               >
                 <p>{m.message}</p>
@@ -119,7 +120,7 @@ export default function ConversationPage() {
         </div>
 
         {/* Input */}
-        <div className="mt-3 border-t border-purple-700 pt-3 flex gap-2">
+        <div className="mt-3 pt-3 flex gap-2">
           <textarea
             className="flex-grow rounded-lg p-1 text-white bg-indigo-800/30 focus:outline-none focus:border-indigo-400 resize-none"
             placeholder={`Message ${userB}...`}
