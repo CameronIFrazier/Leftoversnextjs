@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
-import LoadingDots from "../components/ui/LoadingDots";
+import { FloatingDockDemo } from "@/app/components/ui/FloatingDockDemo";
+import LoadingDots from "@/app/components/ui/LoadingDots";
 
 interface Conversation {
   id: number;
