@@ -11,6 +11,7 @@ type SearchUser = {
   id: number;
   username: string;
   email: string;
+  avatar?: string;
 };
 
 export default function SearchPage({
@@ -122,11 +123,11 @@ export default function SearchPage({
               value={query}
               onChange={handleInputChange}
               placeholder="Search for users..."
-              className="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-400 outline-none focus:border-purple-400 transition-colors duration-200"
+              className="w-full bg-gray-900 border border-white rounded-xl px-4 py-3 text-white placeholder-gray-400 outline-none focus:border-purple-400 transition-colors duration-200"
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 rounded-lg transition-colors duration-200"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-indigo-500 hover:bg-purple-700 text-white px-4 py-1.5 rounded-lg transition-colors duration-200"
             >
               Search
             </button>
@@ -139,13 +140,13 @@ export default function SearchPage({
         <p className="text-gray-400 text-center mb-8">Enter a search term above to find users.</p>
       )}
 
-      {/* Search Results Title */}
+      {/* Search Results Title
       {query.trim() && (
         <h1 className="text-3xl font-bold mb-6">
           Search results for:{" "}
           <span className="text-purple-400">{query.trim()}</span>
         </h1>
-      )}
+      )} */}
 
       {/* Loading, Error, and No Results Messages */}
       {loading && <p>Loading...</p>}
@@ -159,8 +160,23 @@ export default function SearchPage({
             href={`/users/${user.id}`}
             className="block border border-gray-700 rounded-lg p-4 hover:border-purple-400 transition-colors w-[320px]"
           >
-            <p className="text-lg font-semibold">{user.username}</p>
-            <p className="text-sm text-gray-400">{user.email}</p>
+            <div className="flex items-center gap-3">
+              {user.avatar && user.avatar.trim() !== '' ? (
+                <img
+                  src={user.avatar}
+                  alt={user.username}
+                  className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white flex-shrink-0">
+                  {user.username?.[0] ?? "?"}
+                </div>
+              )}
+              <div>
+                <p className="text-lg font-semibold">{user.username}</p>
+                <p className="text-sm text-gray-400">{user.email}</p>
+              </div>
+            </div>
           </Link>
         ))}
       </div>
