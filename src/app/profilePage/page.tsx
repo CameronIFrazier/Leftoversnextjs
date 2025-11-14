@@ -10,9 +10,12 @@ interface Post {
   description: string;
    media_url?: string | null;
   created_at?: string;
+   username?: string | null; 
+  avatar?: string | null;   
 }
 //force redeploy
 export default function ProfilePage() {
+  
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [highlight, setHighlight] = useState<string | null>(null);
@@ -21,6 +24,7 @@ export default function ProfilePage() {
   const [title, setTitle] = useState(""); // 🔹 NEW — new post title
   const [description, setDescription] = useState(""); // 🔹 NEW — new post desc
   const [media, setMedia] = useState<File | null>(null); // 🔹 NEW — new post file
+  
   const [userId, setUserId] = useState<number | null>(null);
   const [isEditMode, setIsEditMode] = useState(false); // 🔹 NEW — edit mode state
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 🔹 NEW — toast notification
@@ -142,57 +146,57 @@ export default function ProfilePage() {
 
   // 🔹 Create new post
   const handleCreatePost = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
-    try {
-      // Create FormData to handle file upload
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("description", description);
-      formData.append("username", userName || "");
-      if (media) {
-        formData.append("media", media);
-      }
+  if (!title) {
+    showToast("Please add a title!");
+    return;
+  }
 
-      const res = await fetch("/api/posts", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+  try {
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("username", userName || "");
+    if (media) formData.append("media", media);
 
-      const data = await res.json();
-//force redeploy 
-      if (data.success) {
-        // Update post list immediately
-        const newPost = data.post
-          ? data.post
-          : { id: data.postId, title, description, media_url: data.media_url, username: userName, created_at: new Date().toISOString(), avatar: profilePic };
+    const res = await fetch("/api/posts", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
 
-        setPosts([newPost, ...posts]);
-        // Reset form
-        setTitle("");
-        setDescription("");
-        setMedia(null);
-        
-        // Scroll to the posts section after successful post creation
-        setTimeout(() => {
-          const postsSection = document.getElementById("past-post");
-          if (postsSection) {
-            postsSection.scrollIntoView({ behavior: "smooth" });
-          }
-        }, 200); // Small delay to ensure DOM updates are complete
-        
-        showToast("Post created successfully!");
-      } else {
-        showToast("Failed to create post.");
-      }
-    } catch (err) {
-      showToast("Error creating post.");
+    const data = await res.json();
+
+    if (!data.success) {
+      showToast("Failed to create post.");
+      return;
     }
-  };
+
+    const newPost = {
+      id: data.post?.id || data.postId,
+      title,
+      description,
+      media_url: data.post?.media_url || data.media_url || null,
+      username: userName,
+      created_at: new Date().toISOString(),
+      avatar: profilePic,
+    };
+
+    setPosts([newPost, ...posts]);
+
+    // Reset form
+    setTitle("");
+    setDescription("");
+    setMedia(null);
+
+    showToast("Post created successfully!");
+  } catch (err) {
+    console.error(err);
+    showToast("Error creating post.");
+  }
+};
 
   return (
     <section className="w-full flex flex-col items-center bg-black text-white">
@@ -349,20 +353,23 @@ export default function ProfilePage() {
             />
             
             <input
-              type="file"
-              id="post-media-upload"
-              className="hidden"
-              onChange={(e) => e.target.files && setMedia(e.target.files[0])}
-            />
-            
-            {/* Upload Media Button */}
-            <button
-              onClick={() => document.getElementById('post-media-upload')?.click()}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
-            >
-              <IconPhoto className="h-5 w-5" />
-              {media ? `Selected: ${media.name}` : 'Upload Media'}
-            </button>
+  type="file"
+  id="post-media-upload"
+  className="hidden"
+  accept="image/*,video/*"
+  onChange={(e) => {
+    const file = e.target.files?.[0];
+    if (file) setMedia(file);
+  }}
+/>
+
+<button
+  onClick={() => document.getElementById('post-media-upload')?.click()}
+  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
+>
+  <IconPhoto className="h-5 w-5" />
+  {media ? `Selected: ${media.name}` : 'Upload Media'}
+</button>
             
             <button
               onClick={handleCreatePost}
@@ -379,38 +386,42 @@ export default function ProfilePage() {
             <h1 className="text-2xl font-bold mb-4 text-white-300">Posts History</h1>
             <div className="w-full flex flex-col gap-4">
               {posts.length === 0 ? (
-                <LoadingDots />
-              ) : (
-                posts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="-500 rounded-lg p-3 bg-indigo-900"
-                  >
-                    <div className="flex items-center gap-3 mb-1">
-                      {profilePic ? (
-                        <img src={profilePic} alt={`${userName || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
-                      )}
-                      <div className="flex flex-col">
-                        {userName && <div className="text-sm text-gray-200">@{userName}</div>}
-                        {post.created_at && (
-                          <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
-                        )}
-                      </div>
-                    </div>
-                    <h2 className="font-bold">{post.title}</h2>
-                    <p>{post.description}</p>
-                    {post.media_url && (
-                      <img
-                        src={post.media_url}
-                        alt="Post media"
-                        className="mt-2 rounded-lg"
-                      />
-                    )}
-                  </div>
-                ))
-              )}
+  <LoadingDots />
+) : (
+  posts.map((post) => (
+    <div key={post.id} className="rounded-lg p-3 bg-indigo-900">
+      <div className="flex items-center gap-3 mb-1">
+        {post.avatar ? (
+          <img
+            src={post.avatar}
+            alt={`${post.username || 'user'} avatar`}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
+        )}
+        <div className="flex flex-col">
+          {post.username && <div className="text-sm text-gray-200">@{post.username}</div>}
+          {post.created_at && (
+            <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
+          )}
+        </div>
+      </div>
+
+      <h2 className="font-bold">{post.title}</h2>
+      <p>{post.description}</p>
+
+      {post.media_url && (
+        post.media_url.endsWith(".mp4") || post.media_url.endsWith(".webm") ? (
+          <video src={post.media_url} controls className="mt-2 rounded-lg max-h-64" />
+        ) : (
+          <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg max-h-64" />
+        )
+      )}
+    </div>
+  ))
+)}
+
             </div>
           </section>
         </section>
