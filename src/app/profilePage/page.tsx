@@ -149,54 +149,61 @@ export default function ProfilePage() {
   const token = localStorage.getItem("token");
   if (!token) return;
 
-  if (!title) {
-    showToast("Please add a title!");
-    return;
-  }
-
   try {
+    // Create FormData to handle file upload
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
     formData.append("username", userName || "");
-    if (media) formData.append("media", media);
+    if (media) {
+      formData.append("media", media);
+    }
 
+    // ✅ Safe fetch with 413 check
     const res = await fetch("/api/posts", {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       body: formData,
     });
 
-    const data = await res.json();
-
-    if (!data.success) {
-      showToast("Failed to create post.");
+    if (!res.ok) {
+      const text = await res.text(); // get raw response text for errors like 413
+      console.error("Upload failed:", text);
+      showToast("Upload failed: file too large.");
       return;
     }
 
-    const newPost = {
-      id: data.post?.id || data.postId,
-      title,
-      description,
-      media_url: data.post?.media_url || data.media_url || null,
-      username: userName,
-      created_at: new Date().toISOString(),
-      avatar: profilePic,
-    };
+    const data = await res.json(); // now safe to parse JSON
 
-    setPosts([newPost, ...posts]);
+    if (data.success) {
+      const newPost = data.post
+        ? data.post
+        : {
+            id: data.postId,
+            title,
+            description,
+            media_url: data.media_url,
+            username: userName,
+            created_at: new Date().toISOString(),
+            avatar: profilePic,
+          };
 
-    // Reset form
-    setTitle("");
-    setDescription("");
-    setMedia(null);
-
-    showToast("Post created successfully!");
+      setPosts([newPost, ...posts]);
+      setTitle("");
+      setDescription("");
+      setMedia(null);
+      showToast("Post created successfully!");
+    } else {
+      showToast("Failed to create post.");
+    }
   } catch (err) {
-    console.error(err);
+    console.error("Error creating post:", err);
     showToast("Error creating post.");
   }
 };
+
 
   return (
     <section className="w-full flex flex-col items-center bg-black text-white">
