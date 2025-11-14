@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 import LoadingDots from "../components/ui/LoadingDots";
 
-
 interface Conversation {
   id: number;
   otherUser: string;
@@ -123,12 +122,12 @@ export default function InboxPage() {
                 className="w-full text-left border border-indigo-700 bg-black bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:border-indigo-500 p-3 rounded-2xl flex gap-3 items-center"
               >
               {/* Avatar */}
-              {conv.otherUserAvatar ? (
+               {conv.otherUserAvatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={conv.otherUserAvatar} alt={conv.otherUser} className="rounded-full h-10 w-10 object-cover" />
               ) : (
-                  {conv.otherUser.charAt(0).toUpperCase()}
                 <div className="h-10 w-10 border border-white/20 rounded-full flex items-center justify-center text-white text-2xl">
+                  {conv.otherUser.charAt(0).toUpperCase()}
                 </div>
               )}
                 
@@ -146,9 +145,10 @@ export default function InboxPage() {
       )}
 
       {/* Compose Modal */}
+
       {showCompose && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
-          <div className="bg-gray-900 rounded-lg p-6 w-80">
+          <div className="border border-white/20 rounded-2xl p-6 w-80">
             <h2 className="text-lg font-semibold mb-4">
               Start New Conversation
             </h2>
@@ -157,7 +157,7 @@ export default function InboxPage() {
               
                 <LoadingDots />
             ) : (
-              <ul className="space-y-2 max-h-60 overflow-y-auto">
+              <ul className="space-y-2 max-h-100 overflow-y-auto">
                 {users.length === 0 ? (
                   <p className="text-gray-400">No other users found.</p>
                 ) : (
@@ -189,9 +189,9 @@ export default function InboxPage() {
             <button
               onClick={() => setShowCompose(false)}
               className="mt-4 w-full round-full
-               bg-blue-600 hover:bg-red-700 p-2 rounded"
+               bg-indigo-600 hover:bg-purple-500 p-2 rounded-full"
             >
-              Cancel
+             Cancel
             </button>
           </div>
         </div>
