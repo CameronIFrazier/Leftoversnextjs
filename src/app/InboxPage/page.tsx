@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 import LoadingDots from "../components/ui/LoadingDots";
 
+
 interface Conversation {
   id: number;
   otherUser: string;
@@ -16,6 +17,7 @@ interface User {
   id: number;
   username: string;
   name?: string;
+  avatar?: string;
 }
 
 export default function InboxPage() {
@@ -56,6 +58,7 @@ export default function InboxPage() {
       try {
         const res = await fetch(`/api/getConversations?user=${currentUser}`);
         const data = await res.json();
+        console.log("Conversations data:", data.conversations);
         if (data.conversations) setConversations(data.conversations);
       } catch (err) {
         console.error("Failed to fetch conversations:", err);
@@ -98,7 +101,7 @@ export default function InboxPage() {
       <div className="w-full max-w-md flex justify-between items-center mb-6">
         <button
           onClick={openCompose}
-          className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded"
+          className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-full"
         >
           Compose
         </button>
@@ -117,15 +120,15 @@ export default function InboxPage() {
             <li key={conv.id}>
               <button
                 onClick={() => router.push(`/Inbox/${conv.otherUser}`)}
-                className="w-full text-left border border-indigo-700 bg-black bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:border-indigo-500 hover:font-bold p-3 rounded-2xl flex gap-3 items-center"
+                className="w-full text-left border border-indigo-700 bg-black bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:border-indigo-500 p-3 rounded-2xl flex gap-3 items-center"
               >
               {/* Avatar */}
               {conv.otherUserAvatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={conv.otherUserAvatar} alt={conv.otherUser} className="rounded-full h-10 w-10 object-cover" />
               ) : (
-                <div className="h-10 w-10 bg-gray-600 rounded-full flex items-center justify-center text-white">
                   {conv.otherUser.charAt(0).toUpperCase()}
+                <div className="h-10 w-10 border border-white/20 rounded-full flex items-center justify-center text-white text-2xl">
                 </div>
               )}
                 
@@ -151,6 +154,7 @@ export default function InboxPage() {
             </h2>
 
             {loadingUsers ? (
+              
                 <LoadingDots />
             ) : (
               <ul className="space-y-2 max-h-60 overflow-y-auto">
@@ -161,19 +165,31 @@ export default function InboxPage() {
                     <li key={user.id}>
                       <button
                         onClick={() => router.push(`/Inbox/${user.username}`)}
-                        className="w-full text-left bg-indigo-800 hover:bg-purple-700 p-2 rounded"
+                        className="w-full text-left bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:from-indigo-600 hover:to-purple-600 p-2 rounded-full flex items-center gap-3"
                       >
-                        {user.name || user.username}
+                        {/* Avatar */}
+                        {user.avatar && user.avatar.trim() !== '' ? (
+                          <img
+                            src={user.avatar}
+                            alt={user.username}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white flex-shrink-0">
+                            {user.name?.[0] ?? "?"}
+                          </div>
+                        )}
+                        <span>{user.name || user.username}</span>
                       </button>
                     </li>
                   ))
                 )}
               </ul>
             )}
-
             <button
               onClick={() => setShowCompose(false)}
-              className="mt-4 w-full round-lg bg-blue-600 hover:bg-red-700 p-2 rounded"
+              className="mt-4 w-full round-full
+               bg-blue-600 hover:bg-red-700 p-2 rounded"
             >
               Cancel
             </button>
