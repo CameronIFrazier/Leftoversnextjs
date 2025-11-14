@@ -34,34 +34,6 @@ interface Comment {
 }
 
 
-function SearchBox() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const router = useRouter();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = searchQuery.trim();
-    if (trimmed.length > 0) {
-      router.push(`/search?query=${encodeURIComponent(trimmed)}`);
-      setSearchQuery("");
-    }
-  };
-
-  return (
-    <div className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm">
-      <form onSubmit={handleSearch} className="w-full">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search users..."
-          className="w-full bg-transparent border border-gray-600 rounded-xl px-3 py-2 text-white placeholder-gray-400 outline-none focus:border-purple-400 transition-colors duration-200"
-        />
-      </form>
-    </div>
-  );
-}
-
 function MiniProfile({ user }: { user: User }) {
   return (
     <div className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm">
@@ -98,7 +70,6 @@ function MiniProfile({ user }: { user: User }) {
 function RightSidebar({ user }: { user: User }) {
   return (
     <aside className="sticky top-24 flex w-full flex-col gap-4 pb-10">
-      <SearchBox />
       <MiniProfile user={user} />
       <SponsorsList />
       <PeopleYouMayKnow />
