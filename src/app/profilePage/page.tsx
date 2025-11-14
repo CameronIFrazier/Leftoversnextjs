@@ -144,19 +144,22 @@ export default function ProfilePage() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const media_url = media ? URL.createObjectURL(media) : null;
-
-    // 🔹 Optional: temporary media handling (can later integrate real upload)
-    
-
     try {
+      // Create FormData to handle file upload
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("username", userName || "");
+      if (media) {
+        formData.append("media", media);
+      }
+
       const res = await fetch("/api/posts", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title, description, media_url, username: userName, }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -165,7 +168,7 @@ export default function ProfilePage() {
         // Update post list immediately
         const newPost = data.post
           ? data.post
-          : { id: data.postId, title, description, media_url, username: userName, created_at: new Date().toISOString(), avatar: profilePic };
+          : { id: data.postId, title, description, media_url: data.media_url, username: userName, created_at: new Date().toISOString(), avatar: profilePic };
 
         setPosts([newPost, ...posts]);
         // Reset form

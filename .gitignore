@@ -43,4 +43,9 @@ next-env.d.ts
 # local env files
 .env.local
 
+.test-db.js
+
 /src/generated/prisma
+
+# uploaded media files
+/public/uploads/
