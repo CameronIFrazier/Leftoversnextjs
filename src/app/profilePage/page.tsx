@@ -463,75 +463,84 @@ export default function ProfilePage() {
               {/* Divider
             <div className="my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div> */}
           {/* 🔹 Past Posts Section */}
-          <section id="past-post" className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm mt-5 flex flex-col items-center justify-start">
+          <section id="past-post" className="py-10 flex flex-col items-center justify-start">
             <h1 className="text-2xl font-bold mb-4 text-white-300">Posts History</h1>
             <div className="w-full flex flex-col gap-4">
               {posts.length === 0 ? (
                 <LoadingDots />
               ) : (
                 posts.map((post) => (
-                  <div key={post.id} className="-500 rounded-lg p-3 bg-indigo-900">
-                    <div className="flex items-center gap-3 mb-1">
-                      {profilePic ? (
-                        <img src={profilePic} alt={`${userName || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
-                      )}
-                      <div className="flex flex-col">
-                        {userName && <div className="text-sm text-gray-200">@{userName}</div>}
-                        {post.created_at && (
-                          <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
+                  <div key={post.id} className="rounded-lg border border-gray-700 p-4 mb-6">
+                    {/* Post Content */}
+                    <div className="rounded-lg p-3 bg-indigo-900 text-white mb-3">
+                      <div className="flex items-center gap-3 mb-2">
+                        {profilePic ? (
+                          <img src={profilePic} alt={`${userName || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
                         )}
+                        <div className="flex flex-col">
+                          {userName && <div className="text-base text-gray-200 font-bold">{userName}</div>}
+                          {post.created_at && (
+                            <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
+                          )}
+                        </div>
                       </div>
+                      <h2 className="font-bold text-base">{post.title}</h2>
+                      <p className="text-sm text-gray-200">{post.description}</p>
+                      {post.media_url && (
+                        <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
+                      )}
                     </div>
-                    <h2 className="font-bold">{post.title}</h2>
-                    <p>{post.description}</p>
-                    {post.media_url && (
-                      <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
-                    )}
 
-                    {/* Comments for this post */}
-                    <div className="mt-4">
-                      <h3 className="text-sm font-semibold mb-2">Comments</h3>
+                    {/* Comments */}
+                    <div className="mt-3">
+                      <h3 className="font-semibold mb-2">Comments</h3>
                       {getTopLevelComments(post.id).length === 0 ? (
                         <p className="text-gray-300 text-sm">No comments yet.</p>
                       ) : (
                         getTopLevelComments(post.id).map((c) => (
-                          <div key={c.id} className="mb-2">
-                            <div className="flex items-start gap-2">
+                          <div key={c.id} className="rounded-lg p-2 mb-2">
+                            <div className="flex items-start gap-3">
                               {c.avatar ? (
                                 <img src={c.avatar} alt={`${c.username || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
                               ) : (
                                 <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
                               )}
                               <div className="flex-1">
-                                <div className="text-sm font-semibold">{c.username ?? 'Unknown'}</div>
-                                <div className="text-xs text-gray-400">{c.created_at ? new Date(c.created_at).toLocaleString() : ''}</div>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-semibold text-gray-100">{c.username ? `@${c.username}` : 'Unknown'}</div>
+                                  {c.created_at && <div className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString()}</div>}
+                                </div>
                                 <div className="mt-1 text-white">{c.comment_text}</div>
 
                                 <button type="button" onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)} className="text-sm text-blue-400 hover:text-blue-300 mt-1">Reply</button>
 
                                 {replyingTo === c.id && (
                                   <div className="mt-2 flex gap-2 items-center">
-                                    <input type="text" value={replyInputs[c.id] || ''} onChange={(e) => setReplyInputs((prev) => ({ ...prev, [c.id]: e.target.value }))} placeholder="Write a reply..." className="flex-grow rounded-lg p-2 text-black" />
-                                    <button type="button" onClick={() => handleReplySubmit(post.id, c.id)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">Send</button>
+                                    <input type="text" value={replyInputs[c.id] || ''} onChange={(e) => setReplyInputs((prev) => ({ ...prev, [c.id]: e.target.value }))} placeholder="Write a reply..." className="flex-grow rounded-lg p-2 text-white bg-indigo-800/30 focus:outline-none focus:border-indigo-400" />
+                                    <button type="button" onClick={() => handleReplySubmit(post.id, c.id)} className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg">Send</button>
                                   </div>
                                 )}
 
                                 {/* Render replies */}
                                 {getReplies(c.id).length > 0 && (
-                                  <div className="ml-8 mt-2 space-y-2">
+                                  <div className="ml-5 mt-2 space-y-1">
                                     {getReplies(c.id).map((r) => (
-                                      <div key={r.id} className="flex gap-2 items-start">
-                                        {r.avatar ? (
-                                          <img src={r.avatar} alt={`${r.username || 'user'} avatar`} className="w-6 h-6 rounded-full object-cover" />
-                                        ) : (
-                                          <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">@</div>
-                                        )}
-                                        <div>
-                                          <div className="text-sm font-semibold">{r.username ?? 'Unknown'}</div>
-                                          <div className="text-xs text-gray-400">{r.created_at ? new Date(r.created_at).toLocaleString() : ''}</div>
-                                          <div className="text-white">{r.comment_text}</div>
+                                      <div key={r.id} className="border-l-2 border-l-indigo-400 pl-4 ml-2 rounded-lg p-2 mb-2">
+                                        <div className="flex gap-3 items-start">
+                                          {r.avatar ? (
+                                            <img src={r.avatar} alt={`${r.username || 'user'} avatar`} className="w-6 h-6 rounded-full object-cover" />
+                                          ) : (
+                                            <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">@</div>
+                                          )}
+                                          <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                              <div className="text-sm font-semibold text-gray-100">{r.username ? `@${r.username}` : 'Unknown'}</div>
+                                              {r.created_at && <div className="text-xs text-gray-400">{new Date(r.created_at).toLocaleString()}</div>}
+                                            </div>
+                                            <div className="mt-1 text-white">{r.comment_text}</div>
+                                          </div>
                                         </div>
                                       </div>
                                     ))}
@@ -545,8 +554,8 @@ export default function ProfilePage() {
 
                       {/* Add Comment Form */}
                       <form onSubmit={(e) => { e.preventDefault(); handleCommentSubmit(post.id); }} className="mt-3 flex gap-2 items-center">
-                        <input type="text" value={newComments[post.id] || ''} onChange={(e) => setNewComments((prev) => ({ ...prev, [post.id]: e.target.value }))} placeholder="Write a comment..." className="flex-grow rounded-lg p-2 text-black" />
-                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">Post</button>
+                        <input type="text" value={newComments[post.id] || ''} onChange={(e) => setNewComments((prev) => ({ ...prev, [post.id]: e.target.value }))} placeholder="Write a comment..." className="flex-grow rounded-lg p-2 text-white bg-indigo-800/30 focus:outline-none focus:border-indigo-400" />
+                        <button type="submit" className="bg-indigo-600 hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-lg">Post</button>
                       </form>
                     </div>
                   </div>
