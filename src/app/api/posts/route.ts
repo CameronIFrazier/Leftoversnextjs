@@ -38,6 +38,12 @@ export async function POST(req: Request) {
         const bytes = await mediaFile.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
+        // Verify Cloudinary is configured
+        if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) {
+          console.error("Cloudinary cloud name not configured");
+          return NextResponse.json({ success: false, error: "Cloud storage not configured" });
+        }
+
         // Upload to Cloudinary
         const result = await new Promise((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
@@ -57,9 +63,14 @@ export async function POST(req: Request) {
         });
 
         media_url = (result as any).secure_url;
+        console.log("Upload successful, URL:", media_url);
+
+        if (!media_url) {
+          throw new Error("No secure_url returned from Cloudinary");
+        }
       } catch (uploadErr) {
         console.error("Cloudinary upload error:", uploadErr);
-        return NextResponse.json({ success: false, error: "Failed to upload file to cloud" });
+        return NextResponse.json({ success: false, error: `Upload failed: ${uploadErr instanceof Error ? uploadErr.message : "Unknown error"}` });
       }
     }
 
