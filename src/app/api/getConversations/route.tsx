@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       port: Number(process.env.MYSQL_PORT),
     });
 
-    // Fetch last message for each conversation
+    // Fetch last message for each conversation with user avatar
     const [rows] = await connection.execute(
       `
       SELECT
@@ -35,22 +35,31 @@ export async function GET(req: Request) {
       [currentUser, currentUser, currentUser]
     );
 
-    await connection.end();
-
     // Deduplicate by otherUser, keeping only the latest message
     const seen = new Set<string>();
     const conversations = [];
     for (const row of rows as any[]) {
       if (!seen.has(row.otherUser)) {
+        // Fetch the other user's avatar from users table
+        const [userRows] = await connection.execute(
+          `SELECT profile_pic FROM users WHERE username = ? LIMIT 1`,
+          [row.otherUser]
+        );
+        
+        const otherUserAvatar = (userRows as any[])[0]?.profile_pic || null;
+        
         conversations.push({
           id: row.otherUser, // can also generate a numeric id if you prefer
           otherUser: row.otherUser,
+          otherUserAvatar: otherUserAvatar,
           lastMessage: row.message,
           updatedAt: row.created_at,
         });
         seen.add(row.otherUser);
       }
     }
+
+    await connection.end();
 
     return NextResponse.json({ conversations });
   } catch (err: any) {

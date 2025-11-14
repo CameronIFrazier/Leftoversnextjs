@@ -117,20 +117,17 @@ export default function InboxPage() {
             <li key={conv.id}>
               <button
                 onClick={() => router.push(`/Inbox/${conv.otherUser}`)}
-                className="w-full text-left border border-white/20 bg-black hover:bg-indigo-500 hover:border-indigo-500 p-3 rounded-2xl flex gap-3 items-center"
+                className="w-full text-left border border-indigo-700 bg-black bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 hover:border-indigo-500 hover:font-bold p-3 rounded-2xl flex gap-3 items-center"
               >
-                {/* Avatar */}
-                {conv.otherUserAvatar ? (
-                  <img
-                    src={conv.otherUserAvatar}
-                    alt={conv.otherUser}
-                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-sm flex-shrink-0">
-                    {conv.otherUser?.[0]?.toUpperCase() || "?"}
-                  </div>
-                )}
+              {/* Avatar */}
+              {conv.otherUserAvatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={conv.otherUserAvatar} alt={conv.otherUser} className="rounded-full h-10 w-10 object-cover" />
+              ) : (
+                <div className="h-10 w-10 bg-gray-600 rounded-full flex items-center justify-center text-white">
+                  {conv.otherUser.charAt(0).toUpperCase()}
+                </div>
+              )}
                 
                 {/* Username and Last Message */}
                 <div className="flex-1 min-w-0 flex justify-between items-center">
