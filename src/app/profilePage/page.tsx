@@ -11,6 +11,7 @@ interface Post {
    media_url?: string | null;
   created_at?: string;
 }
+//force redeploy
 export default function ProfilePage() {
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState("");
