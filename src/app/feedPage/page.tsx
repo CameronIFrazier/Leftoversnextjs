@@ -33,7 +33,6 @@ interface Comment {
   avatar?: string | null;
 }
 
-/* -------------------------- Right sidebar bits -------------------------- */
 
 function SearchBox() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,7 +106,6 @@ function RightSidebar({ user }: { user: User }) {
   );
 }
 
-/* ------------------------------ Share dialog ----------------------------- */
 
 function ShareDialog({
   open,
@@ -196,8 +194,6 @@ function ShareDialog({
     </div>
   );
 }
-
-/* ---------------------------- Comment component --------------------------- */
 
 interface CommentItemProps {
   comment: Comment;
@@ -340,7 +336,6 @@ const CommentItem = React.memo(
   CommentItemComponent
 ) as React.MemoExoticComponent<React.FC<CommentItemProps>>;
 
-/* --------------------------------- Page --------------------------------- */
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -373,7 +368,6 @@ export default function Home() {
   const [shareError, setShareError] = useState<string | null>(null);
   const [shareSuccess, setShareSuccess] = useState(false);
 
-  /* ------------------------------ Likes logic ----------------------------- */
 
   const handleLikeToggle = async (postId: number) => {
     const token = localStorage.getItem("token");
@@ -419,7 +413,6 @@ export default function Home() {
     }
   };
 
-  /* --------------------------- Initial data loads -------------------------- */
 
   // Fetch posts
   useEffect(() => {
@@ -591,7 +584,6 @@ export default function Home() {
     fetchComments();
   }, []);
 
-  /* ----------------------------- Comments logic ---------------------------- */
 
   const handleCommentSubmit = async (postId: number) => {
     const comment = newComments[postId];
@@ -686,7 +678,6 @@ export default function Home() {
   const getReplies = (parentId: number) =>
     comments.filter((c: Comment) => c.parent_comment_id === parentId);
 
-  /* ------------------------------ Share logic ------------------------------ */
 
   const openShare = (post: Post) => {
     setSharePost(post);
@@ -750,7 +741,7 @@ export default function Home() {
     }
   };
 
-  /* --------------------------------- JSX ---------------------------------- */
+
 
   return (
     <div className="h-full w-full bg-black text-white min-h-screen">
