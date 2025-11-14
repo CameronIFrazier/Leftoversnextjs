@@ -16,6 +16,26 @@ interface User {
   name?: string;
 }
 
+// Helper: format lastMessage to hide raw JSON for shared posts
+function formatLastMessage(raw: string | null | undefined): string {
+  if (!raw) return "";
+
+  // Try to detect {"type":"shared_post", ...}
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.type === "shared_post" && parsed.post) {
+      const title =
+        typeof parsed.post.title === "string" && parsed.post.title.trim().length
+          ? parsed.post.title.trim()
+          : "a post";
+      return `Shared a post: ${title}`;
+    }
+  } catch {
+  
+  }
+  return raw;
+}
+
 export default function InboxPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<string | null>(null);
@@ -88,11 +108,14 @@ export default function InboxPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center py-8 relative">
-            {/* Sticky Navbar */}
-            <div className="sticky top-0 z-50 w-full bg-black/95 border-b border-gray-700 flex px-6 items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">Inbox</h1>
-                  <FloatingDockDemo />
-            </div>
+      {/* Sticky Navbar */}
+      <div className="sticky top-0 z-50 w-full bg-black/95 border-b border-gray-700 flex px-6 items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">
+          Inbox
+        </h1>
+        <FloatingDockDemo />
+      </div>
+
       <div className="w-full max-w-md flex justify-between items-center mb-6">
         <button
           onClick={openCompose}
@@ -108,19 +131,26 @@ export default function InboxPage() {
         <p className="text-gray-400">No conversations yet.</p>
       ) : (
         <ul className="w-full max-w-md space-y-2">
-          {conversations.map((conv) => (
-            <li key={conv.id}>
-              <button
-                onClick={() => router.push(`/Inbox/${conv.otherUser}`)}
-                className="w-full text-left bg-indigo-900 hover:bg-purple-800 p-3 rounded flex justify-between items-center"
-              >
-                <span>{conv.otherUser}</span>
-                <span className="text-xs text-gray-400 truncate w-32 text-right">
-                  {conv.lastMessage?.substring(0, 30) || ""}
-                </span>
-              </button>
-            </li>
-          ))}
+          {conversations.map((conv) => {
+            const preview = formatLastMessage(conv.lastMessage).substring(
+              0,
+              40
+            );
+
+            return (
+              <li key={conv.id}>
+                <button
+                  onClick={() => router.push(`/Inbox/${conv.otherUser}`)}
+                  className="w-full text-left bg-indigo-900 hover:bg-purple-800 p-3 rounded flex justify-between items-center"
+                >
+                  <span className="font-semibold">{conv.otherUser}</span>
+                  <span className="text-xs text-gray-400 truncate w-40 text-right">
+                    {preview}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
 
