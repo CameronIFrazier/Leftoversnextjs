@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import mysql, { OkPacket } from "mysql2/promise";
 import { v2 as cloudinary } from "cloudinary";
-
+//force
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
