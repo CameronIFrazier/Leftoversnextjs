@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { IconArrowLeft } from "@tabler/icons-react";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +21,15 @@ export default function SearchPage({
   
   const params = use(searchParams);
   const query = typeof params?.query === "string" ? params.query : "";
+  const router = useRouter();
 
   const [results, setResults] = useState<SearchUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleBackClick = () => {
+    router.back();
+  };
 
   useEffect(() => {
     if (!query) {
@@ -50,6 +57,17 @@ export default function SearchPage({
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center py-10">
+      {/* Back Button */}
+      <div className="w-full max-w-4xl mb-6">
+        <button
+          onClick={handleBackClick}
+          className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors duration-200 mb-4"
+        >
+          <IconArrowLeft size={20} />
+          <span>Back</span>
+        </button>
+      </div>
+
       <h1 className="text-3xl font-bold mb-6">
         Search results for:{" "}
         <span className="text-purple-400">{query || "(none)"}</span>

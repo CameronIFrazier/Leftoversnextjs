@@ -5,15 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 //force deploy comment again
 import {
-  IconBrandGithub,
-  IconBrandX,
   IconEdit,
-  IconExchange,
   IconHome,
   IconInbox,
   IconNewSection,
   IconNotebook,
-  IconTerminal2,
   IconUser,
 } from "@tabler/icons-react";
 
@@ -27,7 +23,7 @@ export function FloatingDockDemo() {
       href: "https://leftoversnextjs-qebo.vercel.app/",
     },
     {
-      title: "Creat new Post",
+      title: "Create new Post",
       icon: (
         <IconNewSection className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
@@ -58,14 +54,14 @@ export function FloatingDockDemo() {
       href: "/InboxPage",
       
     },
-        {
+    {
       title: "Profile",
       icon: (
         <IconUser className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "/profilePage",
-      
     },
+    
     {
       title: "Feed",
       icon: (
@@ -80,7 +76,7 @@ export function FloatingDockDemo() {
   return (
     <div className="flex items-center justify-center">
       <FloatingDock
-        mobileClassName="translate-y-20" // only for demo, remove for production
+        mobileClassName="translate-y-20" 
         items={links}
       />
     </div>

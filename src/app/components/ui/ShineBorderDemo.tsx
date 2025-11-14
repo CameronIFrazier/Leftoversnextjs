@@ -47,7 +47,7 @@ export function ShineBorderDemo() {
         // Simulate loading time for better UX (optional)
         setTimeout(() => {
           setIsLoading(false);
-          // Redirect to profile page
+          // Redirect to profile page (match route folder casing)
           router.push("/profilePage");
         }, 1500);
         
