@@ -1,15 +1,52 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
+import LoadingDots from "../components/ui/LoadingDots";
 
-export default function ConversationPage() {
-  const params = useParams();
-  const userB = params?.id as string;
+interface Conversation {
+  id: number;
+  otherUser: string;
+  otherUserAvatar?: string;
+  lastMessage: string;
+  updatedAt: string;
+}
 
+interface User {
+  id: number;
+  username: string;
+  name?: string;
+}
+
+// Helper: format lastMessage to hide raw JSON for shared posts
+function formatLastMessage(raw: string | null | undefined): string {
+  if (!raw) return "";
+
+  // Try to detect {"type":"shared_post", ...}
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.type === "shared_post" && parsed.post) {
+      const title =
+        typeof parsed.post.title === "string" && parsed.post.title.trim().length
+          ? parsed.post.title.trim()
+          : "a post";
+      return `Shared a post: ${title}`;
+    }
+  } catch {
+    // not JSON – fall through and show raw text
+  }
+
+  return raw;
+}
+
+export default function InboxPage() {
+  const router = useRouter();
   const [currentUser, setCurrentUser] = useState<string | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [messageText, setMessageText] = useState("");
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCompose, setShowCompose] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Fetch current logged-in user from JWT token
   useEffect(() => {
@@ -31,110 +68,152 @@ export default function ConversationPage() {
     fetchCurrentUser();
   }, []);
 
-  // Fetch messages whenever userB changes or currentUser is set
+  // Fetch conversations for the current user
   useEffect(() => {
-    if (!userB || !currentUser) return;
+    if (!currentUser) return;
 
-    setMessages([]);
-    setLoading(true);
-
-    const fetchMessages = async () => {
+    async function fetchConversations() {
+      setLoading(true);
       try {
-        const res = await fetch(
-          `/api/loadConversation?userA=${currentUser}&userB=${userB}`
-        );
+        const res = await fetch(`/api/getConversations?user=${currentUser}`);
         const data = await res.json();
-        if (data.messages) setMessages(data.messages);
+        if (data.conversations) setConversations(data.conversations);
       } catch (err) {
-        console.error("Failed to load messages:", err);
+        console.error("Failed to fetch conversations:", err);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchMessages();
+    fetchConversations();
+  }, [currentUser]);
 
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
-  }, [userB, currentUser]);
-
-  const sendMessage = async () => {
-    if (!messageText.trim() || !userB || !currentUser) return;
-
+  // Fetch all users when opening compose modal
+  const openCompose = async () => {
+    setShowCompose(true);
+    setLoadingUsers(true);
     try {
-      await fetch("/api/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender: currentUser,
-          receiver: userB,
-          message: messageText,
-        }),
-      });
+      const res = await fetch("/api/users");
+      const data = await res.json();
 
-      // Append message locally for instant UI feedback
-      setMessages((prev) => [
-        ...prev,
-        { sender: currentUser, receiver: userB, message: messageText, created_at: new Date() },
-      ]);
-
-      setMessageText("");
+      if (data.users) {
+        const filtered = data.users.filter(
+          (u: User) => u.username !== currentUser
+        );
+        setUsers(filtered);
+      }
     } catch (err) {
-      console.error("Failed to send message:", err);
+      console.error("Failed to fetch users:", err);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center py-6">
-      <div className="w-full max-w-xl flex flex-col h-screen">
-        {/* Header */}
-        <div className="mb-4 flex items-center gap-3">
-          <a href="/InboxPage" className="text-purple-400">
-            ← Back
-          </a>
-
-          <h2 className="text-lg font-semibold">{userB}</h2>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm p-4 space-y-3">
-          {loading ? (
-            <p>Loading conversation...</p>
-          ) : messages.length === 0 ? (
-            <p className="text-gray-400">No messages yet.</p>
-          ) : (
-            messages.map((m, i) => (
-              <div
-                key={i}
-                className={`p-2 rounded-md max-w-[80%] ${
-                  m.sender === currentUser
-                    ? "bg-indigo-500 self-end ml-auto" //sender bubble
-                    : "bg-blue-900 self-start"  //receiver bubble
-                }`}
-              >
-                <p>{m.message}</p>
-                <p className="text-xs text-gray-400 mt-1">{m.sender}</p> {/* username under the text message */}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Input */}
-        <div className="mt-3 pt-3 flex gap-2">
-          <textarea
-            className="flex-grow rounded-lg p-1 text-white bg-indigo-800/30 focus:outline-none focus:border-indigo-400 resize-none"
-            placeholder={`Message ${userB}...`}
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-          />
-          <button
-            onClick={sendMessage}
-            className="bg-purple-600 px-2 py-2 rounded-lg hover:bg-purple-700"
-          >
-            Send
-          </button>
-        </div>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center py-8 relative">
+      {/* Sticky Navbar */}
+      <div className="sticky top-0 z-50 w-full bg-black/95 border-b border-gray-700 flex px-6 items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">
+          Inbox
+        </h1>
+        <FloatingDockDemo />
       </div>
+
+      <div className="w-full max-w-md flex justify-between items-center mb-6">
+        <button
+          onClick={openCompose}
+          className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded"
+        >
+          Compose
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex flex-col items-center gap-2">
+          <LoadingDots />
+          <p>Loading conversations...</p>
+        </div>
+      ) : conversations.length === 0 ? (
+        <p className="text-gray-400">No conversations yet.</p>
+      ) : (
+        <ul className="w-full max-w-md space-y-2">
+          {conversations.map((conv) => {
+            const preview = formatLastMessage(conv.lastMessage).substring(0, 40);
+
+            return (
+              <li key={conv.id}>
+                <button
+                  onClick={() => router.push(`/Inbox/${conv.otherUser}`)}
+                  className="w-full text-left border border-white/20 bg-black hover:bg-indigo-500 hover:border-indigo-500 p-3 rounded flex items-center gap-3"
+                >
+                  {/* Avatar */}
+                  {conv.otherUserAvatar ? (
+                    <img
+                      src={conv.otherUserAvatar}
+                      alt={conv.otherUser}
+                      className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-sm flex-shrink-0">
+                      {conv.otherUser?.[0].toUpperCase() || "?"}
+                    </div>
+                  )}
+
+                  {/* Username + last message preview */}
+                  <div className="flex-1 min-w-0 flex justify-between items-center">
+                    <span className="font-semibold">{conv.otherUser}</span>
+                    <span className="text-xs text-gray-400 truncate w-40 text-right ml-2">
+                      {preview}
+                    </span>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {/* Compose Modal */}
+      {showCompose && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
+          <div className="bg-gray-900 rounded-lg p-6 w-80">
+            <h2 className="text-lg font-semibold mb-4">
+              Start New Conversation
+            </h2>
+
+            {loadingUsers ? (
+              <div className="flex flex-col items-center gap-2">
+                <LoadingDots />
+                <p>Loading users...</p>
+              </div>
+            ) : (
+              <ul className="space-y-2 max-h-60 overflow-y-auto">
+                {users.length === 0 ? (
+                  <p className="text-gray-400">No other users found.</p>
+                ) : (
+                  users.map((user) => (
+                    <li key={user.id}>
+                      <button
+                        onClick={() => router.push(`/Inbox/${user.username}`)}
+                        className="w-full text-left bg-indigo-800 hover:bg-purple-700 p-2 rounded"
+                      >
+                        {user.name || user.username}
+                      </button>
+                    </li>
+                  ))
+                )}
+              </ul>
+            )}
+
+            <button
+              onClick={() => setShowCompose(false)}
+              className="mt-4 w-full rounded-lg bg-red-600 hover:bg-red-700 p-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
