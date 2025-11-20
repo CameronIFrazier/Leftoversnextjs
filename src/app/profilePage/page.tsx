@@ -149,17 +149,13 @@ export default function ProfilePage() {
   const token = localStorage.getItem("token");
   if (!token) return;
 
-  try {
-    // Create FormData to handle file upload
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("username", userName || "");
-    if (media) {
-      formData.append("media", media);
-    }
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("description", description);
+  formData.append("username", userName || "");
+  if (media) formData.append("media", media);
 
-    // ✅ Safe fetch with 413 check
+  try {
     const res = await fetch("/api/posts", {
       method: "POST",
       headers: {
@@ -168,41 +164,23 @@ export default function ProfilePage() {
       body: formData,
     });
 
-    if (!res.ok) {
-      const text = await res.text(); // get raw response text for errors like 413
-      console.error("Upload failed:", text);
-      showToast("Upload failed: file too large.");
-      return;
-    }
-
-    const data = await res.json(); // now safe to parse JSON
+    const data = await res.json();
 
     if (data.success) {
-      const newPost = data.post
-        ? data.post
-        : {
-            id: data.postId,
-            title,
-            description,
-            media_url: data.media_url,
-            username: userName,
-            created_at: new Date().toISOString(),
-            avatar: profilePic,
-          };
-
-      setPosts([newPost, ...posts]);
+      setPosts([data.post, ...posts]);
       setTitle("");
       setDescription("");
       setMedia(null);
       showToast("Post created successfully!");
     } else {
-      showToast("Failed to create post.");
+      showToast(`Failed to create post: ${data.error}`);
     }
   } catch (err) {
-    console.error("Error creating post:", err);
     showToast("Error creating post.");
   }
 };
+
+
 
 
   return (
@@ -396,38 +374,29 @@ export default function ProfilePage() {
   <LoadingDots />
 ) : (
   posts.map((post) => (
-    <div key={post.id} className="rounded-lg p-3 bg-indigo-900">
-      <div className="flex items-center gap-3 mb-1">
-        {post.avatar ? (
-          <img
-            src={post.avatar}
-            alt={`${post.username || 'user'} avatar`}
-            className="w-8 h-8 rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
-        )}
-        <div className="flex flex-col">
-          {post.username && <div className="text-sm text-gray-200">@{post.username}</div>}
-          {post.created_at && (
-            <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
-          )}
-        </div>
-      </div>
-
-      <h2 className="font-bold">{post.title}</h2>
-      <p>{post.description}</p>
-
-      {post.media_url && (
-        post.media_url.endsWith(".mp4") || post.media_url.endsWith(".webm") ? (
-          <video src={post.media_url} controls className="mt-2 rounded-lg max-h-64" />
-        ) : (
-          <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg max-h-64" />
-        )
+    <div key={post.id} className="p-3 bg-indigo-900 rounded-lg">
+    <div className="flex items-center gap-3 mb-1">
+      {post.avatar ? (
+        <img src={post.avatar} className="w-8 h-8 rounded-full" />
+      ) : (
+        <div className="w-8 h-8 rounded-full bg-gray-600" />
       )}
+      <div className="flex flex-col">
+        <div className="text-sm text-gray-200">@{post.username}</div>
+        {post.created_at && (
+          <div className="text-xs text-gray-400">
+            {new Date(post.created_at).toLocaleString()}
+          </div>
+        )}
+      </div>
     </div>
+    <h2 className="font-bold">{post.title}</h2>
+    <p>{post.description}</p>
+    {post.media_url && <img src={post.media_url} className="mt-2 rounded-lg" />}
+  </div>
   ))
 )}
+
 
             </div>
           </section>
