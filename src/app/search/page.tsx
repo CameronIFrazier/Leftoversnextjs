@@ -47,7 +47,26 @@ export default function SearchPage({
         throw new Error(`Server error: ${response.status} - ${text}`);
       }
       const data = await response.json();
-      setResults(Array.isArray(data) ? data : []);
+      const rawResults = Array.isArray(data) ? data : [];
+      
+      // Sort results to prioritize names that start with the search term
+      const sortedResults = rawResults.sort((a, b) => {
+        const searchLower = searchQuery.toLowerCase().trim();
+        const aUsername = a.username.toLowerCase();
+        const bUsername = b.username.toLowerCase();
+        
+        const aStartsWith = aUsername.startsWith(searchLower);
+        const bStartsWith = bUsername.startsWith(searchLower);
+        
+        // If one starts with search term and other doesn't, prioritize the one that starts with it
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        
+        // If both start with search term or neither do, sort alphabetically
+        return aUsername.localeCompare(bUsername);
+      });
+      
+      setResults(sortedResults);
     } catch (err) {
       console.error("Search error:", err);
       setError("Something went wrong while searching.");
