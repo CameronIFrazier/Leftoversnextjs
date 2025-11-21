@@ -10,7 +10,7 @@ const s3 = new S3Client({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
 });
-
+//force
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
