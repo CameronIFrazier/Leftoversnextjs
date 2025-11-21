@@ -28,10 +28,11 @@ export async function GET(req: Request) {
 
         const [rows] = await connection.execute<Following[]>(
             `
-      SELECT users.id, users.firstname, users.lastname, users.userName, users.profile_pic
-      FROM followers
-      JOIN users ON followers.followed_id = users.id
-      WHERE followers.follower_id = ?
+                SELECT users.id, users.firstname, users.lastname, users.userName, users.profile_pic
+                FROM follows
+                         JOIN users ON follows.following_id = users.id
+                WHERE follows.follower_id = ?
+
       `,
             [userId]
         );
