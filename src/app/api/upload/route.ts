@@ -1,6 +1,6 @@
 // src/app/api/upload/route.ts
 import { NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary";
+import cloudinary, { initCloudinary } from "@/lib/cloudinary";
 import { writeFile } from "fs/promises";
 import os from "os";
 import path from "path";
@@ -15,6 +15,9 @@ export const config = {
 
 export async function POST(req: Request) {
   try {
+    // Ensure Cloudinary is initialized with runtime env vars
+    initCloudinary();
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 

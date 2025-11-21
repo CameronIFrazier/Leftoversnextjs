@@ -1,14 +1,7 @@
-import { v2 as cloudinary } from "cloudinary";
+import cloudinary, { initCloudinary } from "@/lib/cloudinary";
 import mysql, { RowDataPacket } from "mysql2/promise";
 import { verify } from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 type UserRow = RowDataPacket & {
   profile_pic: string | null;
@@ -31,6 +24,8 @@ export const POST = async (req: NextRequest) => {
   }
 
   try {
+    // Ensure cloudinary initialized with runtime envs
+    initCloudinary();
     const formData = await req.formData();
     const file = formData.get("pfp") as File | null;
     if (!file) {

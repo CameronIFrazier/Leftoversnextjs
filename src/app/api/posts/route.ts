@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import { v2 as cloudinary } from "cloudinary";
+import { initCloudinary } from "@/lib/cloudinary";
 import mysql, { OkPacket } from "mysql2/promise";
 
 cloudinary.config({
@@ -25,6 +26,8 @@ export const config = {
 
 export async function POST(req: Request) {
   try {
+    // ensure cloudinary configured with runtime envs
+    initCloudinary();
     const formData = await req.formData();
     const title = formData.get("title")?.toString() ?? "";
     const description = formData.get("description")?.toString() ?? "";
