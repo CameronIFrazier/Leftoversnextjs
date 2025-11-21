@@ -92,7 +92,7 @@ function MessageBubble({
 
   const bubbleColor = isOwn
     ? "bg-blue-700 text-white"
-    : "bg-red-800 text-white";
+    : "bg-indigo-800 text-white";
 
   let content: React.ReactNode;
 
@@ -107,7 +107,7 @@ function MessageBubble({
         {shared.note && (
           <p className="text-sm font-medium">{shared.note}</p>
         )}
-        <div className="rounded-lg border border-white/20 bg-black/30 p-3">
+        <div className="rounded-lg border border-white/20 bg-black p-3">
           <div className="flex items-center gap-2 mb-2">
             {p.avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
