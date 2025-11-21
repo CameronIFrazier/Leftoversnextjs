@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import cloudinary from "../../api/test-cloudinary/route";
+import cloudinary from "../lib/cloudinary";
 import { writeFile } from "fs/promises";
 import os from "os";
 import path from "path";
