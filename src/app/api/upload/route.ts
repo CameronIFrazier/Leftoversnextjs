@@ -1,6 +1,6 @@
 // src/app/api/upload/route.ts
 import { NextResponse } from "next/server";
-import cloudinary from "../../../lib/cloudinary";
+import cloudinary from "@/lib/cloudinary";
 import { writeFile } from "fs/promises";
 import os from "os";
 import path from "path";
