@@ -38,7 +38,12 @@ export async function POST(req: Request) {
     });
 
     console.log("Cloudinary upload successful:", result.secure_url);
-
+    
+console.log("Cloudinary envs:", {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
     return NextResponse.json({
       success: true,
       url: result.secure_url,
