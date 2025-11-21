@@ -31,6 +31,11 @@ export async function POST(req: Request) {
     const username = formData.get("username")?.toString() ?? "";
     const mediaFile = formData.get("media") as File | null;
 
+    console.log("Cloudinary envs:", {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
     if (!title || !username) {
       return NextResponse.json({ success: false, error: "Missing fields" });
     }
