@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
+// Hardcoded bucket name
+const BUCKET_NAME = "leftoversnextjsbucket";
+
 const s3 = new S3Client({
-  region: process.env.AWS_REGION!,
+  region: process.env.AWS_REGION!, // still use env for credentials and region
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
@@ -24,17 +27,19 @@ export async function POST(req: Request) {
     const fileName = `${timestamp}-${file.name}`;
     const key = `leftovers_posts/${fileName}`;
 
+    // Upload to S3
     await s3.send(
       new PutObjectCommand({
-        Bucket: process.env.S3_BUCKET_NAME!, // ✅ use server-side env
+        Bucket: BUCKET_NAME,
         Key: key,
         Body: buffer,
         ContentType: file.type,
-         // ❌ remove ACL to fix AccessControlListNotSupported
+        ACL: undefined, // don't include ACL if your bucket doesn't allow it
       })
     );
 
-    const publicUrl = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
+    // Public URL
+    const publicUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
     console.log("S3 upload successful:", publicUrl);
 
     return NextResponse.json({ success: true, media_url: publicUrl });
