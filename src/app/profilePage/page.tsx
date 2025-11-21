@@ -386,31 +386,37 @@ const handleCreatePost = async () => {
     className="hidden"
     accept="image/*,video/*"
     onChange={async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-      try {
-        // Send file to your API route
-        const formData = new FormData();
-        formData.append("file", file);
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
 
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-        const data = await res.json();
+    // Read response as text first to avoid JSON parse errors
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`Server returned non-JSON response: ${text}`);
+    }
 
-        if (data.success && data.media_url) {
-          setMediaUrl(data.media_url);
-          console.log("Upload successful:", data.media_url);
-        } else {
-          console.error("Upload failed:", data.error || "Unknown error");
-        }
-      } catch (err) {
-        console.error("Upload error:", err);
-      }
-    }}
+    if (data.success && data.media_url) {
+      setMediaUrl(data.media_url);
+      console.log("Upload successful:", data.media_url);
+    } else {
+      console.error("Upload failed:", data.error || "Unknown error");
+    }
+  } catch (err) {
+    console.error("Upload error:", err);
+  }
+}}
   />
 
   {/* Upload Button */}
