@@ -35,22 +35,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Missing fields" });
     }
 
-    let media_url: string | null = null;
+  
 
-    if (mediaFile) {
-      const buffer = Buffer.from(await mediaFile.arrayBuffer());
-      const result: any = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { folder: "leftovers_posts", resource_type: "auto" },
-          (err, result) => {
-            if (err) reject(err);
-            else resolve(result);
-          }
-        );
-        uploadStream.end(buffer);
-      });
-      media_url = result.secure_url;
-    }
+    // Since frontend already uploaded to Cloudinary, just accept the URL
+const media_url = formData.get("media")?.toString() ?? null;
+console.log("Received media_url:", media_url);
+
 
     const [result] = await pool.execute<OkPacket>(
       `INSERT INTO posts (username, title, description, media_url) VALUES (?, ?, ?, ?)`,

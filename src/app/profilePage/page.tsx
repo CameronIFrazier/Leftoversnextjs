@@ -4,6 +4,7 @@ import { FloatingDockDemo } from "../components/ui/FloatingDockDemo";
 import LoadingDots from "../components/ui/LoadingDots";
 import GradientBorder from "../components/ui/GradientBorder";
 import { IconEdit, IconPhoto, IconTrash } from "@tabler/icons-react";
+import UploadForm from "../components/ui/UploadForm";
 interface Post {
   id: number;
   title: string;
@@ -15,7 +16,7 @@ interface Post {
 }
 //force redeploy
 export default function ProfilePage() {
-  
+const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local preview
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [highlight, setHighlight] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export default function ProfilePage() {
   const [title, setTitle] = useState(""); // 🔹 NEW — new post title
   const [description, setDescription] = useState(""); // 🔹 NEW — new post desc
   const [media, setMedia] = useState<File | null>(null); // 🔹 NEW — new post file
-  
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
   const [isEditMode, setIsEditMode] = useState(false); // 🔹 NEW — edit mode state
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 🔹 NEW — toast notification
@@ -144,41 +145,60 @@ export default function ProfilePage() {
     }
   };
 
+
+   const handleUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.url) {
+        setMediaUrl(data.url); // save URL in state
+      } else {
+        console.error("Upload failed:", data.error);
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+    }
+  };
+
   // 🔹 Create new post
   const handleCreatePost = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) return;
-
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("username", userName || "");
-  if (media) formData.append("media", media);
-
-  try {
-    const res = await fetch("/api/posts", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      setPosts([data.post, ...posts]);
-      setTitle("");
-      setDescription("");
-      setMedia(null);
-      showToast("Post created successfully!");
-    } else {
-      showToast(`Failed to create post: ${data.error}`);
+    if (!title || !userName) {
+      alert("Title and username are required");
+      return;
     }
-  } catch (err) {
-    showToast("Error creating post.");
-  }
-};
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("username", userName);
+    if (mediaUrl) formData.append("media", mediaUrl); // send Cloudinary URL
+
+    try {
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPosts([data.post, ...posts]); // show the new post immediately
+        setTitle("");
+        setDescription("");
+        setMediaUrl(null); // reset upload
+      } else {
+        console.error("Post creation failed:", data.error);
+      }
+    } catch (err) {
+      console.error("Error creating post:", err);
+    }
+  };
+
+
 
 
 
@@ -321,85 +341,71 @@ export default function ProfilePage() {
           </section>
 
           {/* 🔹 Post Creation Section */}
-          <section className="h-auto rounded-lg mt-5 flex flex-col p-4 bg-black">
-            <h1 className="text-lg font-semibold mb-3">New Post</h1>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title"
-              className="w-full p-2 mb-2 rounded bg-indigo-900"
-            />
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description"
-              className="w-full p-2 mb-2 rounded bg-indigo-900"
-              rows={4}
-            />
-            
-            <input
-  type="file"
-  id="post-media-upload"
-  className="hidden"
-  accept="image/*,video/*"
-  onChange={(e) => {
-    const file = e.target.files?.[0];
-    if (file) setMedia(file);
-  }}
-/>
+          {/* 🔹 Post Creation Section */}
+<section className="h-auto rounded-lg mt-5 flex flex-col p-4 bg-black">
+        <h1 className="text-lg font-semibold mb-3">New Post</h1>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Title"
+          className="w-full p-2 mb-2 rounded bg-indigo-900"
+        />
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Description"
+          className="w-full p-2 mb-2 rounded bg-indigo-900"
+          rows={4}
+        />
 
-<button
-  onClick={() => document.getElementById('post-media-upload')?.click()}
-  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
->
-  <IconPhoto className="h-5 w-5" />
-  {media ? `Selected: ${media.name}` : 'Upload Media'}
-</button>
-            
-            <button
-              onClick={handleCreatePost}
-              className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
-            >
-              Create Post
-            </button>
-          </section>
+        {/* File Upload */}
+        <input
+          type="file"
+          id="post-media-upload"
+          className="hidden"
+          accept="image/*,video/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleUpload(file); // ✅ upload immediately
+          }}
+        />
+        <button
+          onClick={() => document.getElementById("post-media-upload")?.click()}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
+        >
+          <IconPhoto className="h-5 w-5" />
+          {mediaUrl ? `Uploaded!` : "Upload Media"}
+        </button>
+
+        <button
+          onClick={handleCreatePost}
+          className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
+        >
+          Create Post
+        </button>
+      </section>
 
               {/* Divider */}
             <div className="my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
           {/* 🔹 Past Posts Section */}
-          <section id="past-post" className="h-auto rounded-lg mt-5 flex flex-col items-center justify-start bg-black p-4">
-            <h1 className="text-2xl font-bold mb-4 text-white-300">Posts History</h1>
-            <div className="w-full flex flex-col gap-4">
-              {posts.length === 0 ? (
-  <LoadingDots />
-) : (
-  posts.map((post) => (
-    <div key={post.id} className="p-3 bg-indigo-900 rounded-lg">
-    <div className="flex items-center gap-3 mb-1">
-      {post.avatar ? (
-        <img src={post.avatar} className="w-8 h-8 rounded-full" />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-gray-600" />
-      )}
-      <div className="flex flex-col">
-        <div className="text-sm text-gray-200">@{post.username}</div>
-        {post.created_at && (
-          <div className="text-xs text-gray-400">
-            {new Date(post.created_at).toLocaleString()}
+          <section className="w-[60%] mt-5">
+        {posts.map((post) => (
+          <div key={post.id} className="p-3 bg-indigo-900 rounded-lg mb-3">
+            <h2 className="font-bold">{post.title}</h2>
+            <p>{post.description}</p>
+            {post.media_url && (
+              post.media_url.endsWith(".mp4") ? (
+                <video controls className="mt-2 rounded-lg w-full">
+                  <source src={post.media_url} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <img src={post.media_url} className="mt-2 rounded-lg w-full" />
+              )
+            )}
           </div>
-        )}
-      </div>
-    </div>
-    <h2 className="font-bold">{post.title}</h2>
-    <p>{post.description}</p>
-    {post.media_url && <img src={post.media_url} className="mt-2 rounded-lg" />}
-  </div>
-  ))
-)}
-
-
-            </div>
-          </section>
+        ))}
+      </section>
         </section>
 
         {/* Right side */}

@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
 
-export async function GET() {
-  return NextResponse.json({
-    cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? "✓ Set" : "✗ Missing",
-    apiKey: process.env.CLOUDINARY_API_KEY ? "✓ Set" : "✗ Missing",
-    apiSecret: process.env.CLOUDINARY_API_SECRET ? "✓ Set" : "✗ Missing",
-    nodeEnv: process.env.NODE_ENV,
-  });
-}
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export default cloudinary;
