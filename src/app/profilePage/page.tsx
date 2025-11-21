@@ -146,57 +146,72 @@ const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local 
   };
 
 
-   const handleUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
+const handleUpload = async (file: File) => {
+  try {
+    const res = await fetch("/api/upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fileName: file.name, fileType: file.type }),
+    });
 
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.url) {
-        setMediaUrl(data.url); // save URL in state
-      } else {
-        console.error("Upload failed:", data.error);
-      }
-    } catch (err) {
-      console.error("Upload error:", err);
-    }
-  };
+    const { url, key } = await res.json();
+    if (!url || !key) throw new Error("Failed to get signed URL");
 
-  // 🔹 Create new post
-  const handleCreatePost = async () => {
-    if (!title || !userName) {
-      alert("Title and username are required");
-      return;
-    }
+    await fetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("username", userName);
-    if (mediaUrl) formData.append("media", mediaUrl); // send Cloudinary URL
+    // Save S3 URL
+    const publicUrl = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
+    setMediaUrl(publicUrl);
+    console.log("Uploaded to S3:", publicUrl);
 
-    try {
-      const res = await fetch("/api/posts", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success) {
-        setPosts([data.post, ...posts]); // show the new post immediately
-        setTitle("");
-        setDescription("");
-        setMediaUrl(null); // reset upload
-      } else {
-        console.error("Post creation failed:", data.error);
-      }
-    } catch (err) {
-      console.error("Error creating post:", err);
-    }
-  };
+  } catch (err) {
+    console.error("Upload failed:", err);
+    showToast("Upload failed: " + (err as Error).message);
+  }
+};
+
+
+
+const handleCreatePost = async () => {
+  if (!title || !userName) return;
+
+  const res = await fetch("/api/posts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title,
+      description,
+      userName,
+      mediaUrl,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    console.log("Post created:", data.post);
+
+    // 🔹 Immediately show the new post
+    setPosts((prev) => [data.post, ...prev]);
+
+    // Reset input fields
+    setTitle("");
+    setDescription("");
+    setMediaUrl(null);
+
+    showToast("Post created!");
+  } else {
+    console.error("Failed to create post:", data.error);
+    showToast("Failed to create post.");
+  }
+};
+
+
+
 
 
 
@@ -342,69 +357,114 @@ const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local 
 
           {/* 🔹 Post Creation Section */}
           {/* 🔹 Post Creation Section */}
+{/* 🔹 Post Creation Section */}
+{/* 🔹 Post Creation Section */}
 <section className="h-auto rounded-lg mt-5 flex flex-col p-4 bg-black">
-        <h1 className="text-lg font-semibold mb-3">New Post</h1>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title"
-          className="w-full p-2 mb-2 rounded bg-indigo-900"
-        />
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description"
-          className="w-full p-2 mb-2 rounded bg-indigo-900"
-          rows={4}
-        />
+  <h1 className="text-lg font-semibold mb-3">New Post</h1>
 
-        {/* File Upload */}
-        <input
-          type="file"
-          id="post-media-upload"
-          className="hidden"
-          accept="image/*,video/*"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleUpload(file); // ✅ upload immediately
-          }}
-        />
-        <button
-          onClick={() => document.getElementById("post-media-upload")?.click()}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
-        >
-          <IconPhoto className="h-5 w-5" />
-          {mediaUrl ? `Uploaded!` : "Upload Media"}
-        </button>
+  {/* Title */}
+  <input
+    value={title}
+    onChange={(e) => setTitle(e.target.value)}
+    placeholder="Title"
+    className="w-full p-2 mb-2 rounded bg-indigo-900"
+  />
 
-        <button
-          onClick={handleCreatePost}
-          className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
-        >
-          Create Post
-        </button>
-      </section>
+  {/* Description */}
+  <textarea
+    value={description}
+    onChange={(e) => setDescription(e.target.value)}
+    placeholder="Description"
+    className="w-full p-2 mb-2 rounded bg-indigo-900"
+    rows={4}
+  />
+
+  {/* File Upload */}
+  <input
+    type="file"
+    id="post-media-upload"
+    className="hidden"
+    accept="image/*,video/*"
+    onChange={async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        // Send file to your API route
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.media_url) {
+          setMediaUrl(data.media_url);
+          console.log("Upload successful:", data.media_url);
+        } else {
+          console.error("Upload failed:", data.error || "Unknown error");
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+      }
+    }}
+  />
+
+  {/* Upload Button */}
+  <button
+    onClick={() => document.getElementById("post-media-upload")?.click()}
+    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
+  >
+    <IconPhoto className="h-5 w-5" />
+    {mediaUrl ? "Uploaded!" : "Upload Media"}
+  </button>
+
+  {/* Create Post Button */}
+  <button
+    onClick={handleCreatePost}
+    className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
+  >
+    Create Post
+  </button>
+</section>
+
+
 
               {/* Divider */}
             <div className="my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
           {/* 🔹 Past Posts Section */}
           <section className="w-[60%] mt-5">
-        {posts.map((post) => (
-          <div key={post.id} className="p-3 bg-indigo-900 rounded-lg mb-3">
-            <h2 className="font-bold">{post.title}</h2>
-            <p>{post.description}</p>
-            {post.media_url && (
-              post.media_url.endsWith(".mp4") ? (
-                <video controls className="mt-2 rounded-lg w-full">
-                  <source src={post.media_url} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <img src={post.media_url} className="mt-2 rounded-lg w-full" />
-              )
-            )}
-          </div>
-        ))}
+        {posts && posts.length > 0 ? (
+    posts.map((post) => {
+      // Skip any undefined/null posts just in case
+      if (!post) return null;
+
+      const { id, title, description, media_url } = post;
+
+      return (
+        <div key={id} className="p-3 bg-indigo-900 rounded-lg mb-3">
+          <h2 className="font-bold">{title || "Untitled Post"}</h2>
+          <p>{description || ""}</p>
+
+          {media_url && (
+            media_url.endsWith(".mp4") ? (
+              <video controls className="mt-2 rounded-lg w-full">
+                <source src={media_url} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <img src={media_url} alt={title || "Post media"} className="mt-2 rounded-lg w-full" />
+            )
+          )}
+        </div>
+      );
+    })
+  ) : (
+    <p className="text-gray-400">No posts yet.</p>
+  )}
       </section>
         </section>
 

@@ -1,76 +1,53 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import { v2 as cloudinary } from "cloudinary";
-import { initCloudinary } from "@/lib/cloudinary";
-import mysql, { OkPacket } from "mysql2/promise";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  port: Number(process.env.MYSQL_PORT),
-});
-//force redeploy
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+import mysql from "mysql2/promise";
 
 export async function POST(req: Request) {
   try {
-    // ensure cloudinary configured with runtime envs
-    initCloudinary();
-    const formData = await req.formData();
-    const title = formData.get("title")?.toString() ?? "";
-    const description = formData.get("description")?.toString() ?? "";
-    const username = formData.get("username")?.toString() ?? "";
-    const mediaFile = formData.get("media") as File | null;
+    const body = await req.json();
+    const { title, description, userName, mediaUrl } = body;
 
-    console.log("Cloudinary envs:", {
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-    if (!title || !username) {
-      return NextResponse.json({ success: false, error: "Missing fields" });
+    if (!title || !userName) {
+      return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
-  
+    // Connect to MySQL (Railway)
+    const db = await mysql.createConnection({
+      host: process.env.MYSQL_HOST,
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE,
+      port: Number(process.env.MYSQL_PORT),
+    });
 
-    // Since frontend already uploaded to Cloudinary, just accept the URL
-const media_url = formData.get("media")?.toString() ?? null;
-console.log("Received media_url:", media_url);
-
-
-    const [result] = await pool.execute<OkPacket>(
-      `INSERT INTO posts (username, title, description, media_url) VALUES (?, ?, ?, ?)`,
-      [username, title, description, media_url]
+    const [result] = await db.execute(
+      `INSERT INTO posts (title, description, username, media_url) VALUES (?, ?, ?, ?)`,
+      [title, description || "", userName, mediaUrl || null]
     );
 
-    const insertedId = result.insertId;
+    await db.end();
 
-    const [rows] = await pool.execute(
-      `SELECT p.id, p.title, p.description, p.media_url, p.created_at, p.username,
-              u.profile_pic AS avatar
-       FROM posts p
-       LEFT JOIN users u ON p.username = u.userName
-       WHERE p.id = ?`,
-      [insertedId]
-    );
+    return NextResponse.json({ success: true, postId: (result as any).insertId });
+  } catch (err: any) {
+    console.error("DB Error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
 
-    const createdPost = Array.isArray(rows) && rows.length ? rows[0] : null;
+export async function GET() {
+  try {
+    const db = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      database: process.env.DB_NAME,
+    });
 
-    return NextResponse.json({ success: true, post: createdPost });
-  } catch (err: unknown) {
-    console.error("Error creating post:", err);
-    return NextResponse.json({ success: false, error: (err as Error).message });
+    const [rows] = await db.query("SELECT * FROM posts ORDER BY created_at DESC");
+    await db.end();
+
+    return NextResponse.json({ success: true, posts: rows });
+  } catch (err: any) {
+    console.error("DB Error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

@@ -1,60 +1,47 @@
-// src/app/api/upload/route.ts
 import { NextResponse } from "next/server";
-import cloudinary, { initCloudinary } from "@/lib/cloudinary";
-import { writeFile } from "fs/promises";
-import os from "os";
+import fs from "fs";
 import path from "path";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-export const runtime = "nodejs";
-
-export const config = {
-  api: {
-    bodyParser: false, // Required for file uploads
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
-};
+});
 
 export async function POST(req: Request) {
   try {
-    // Ensure Cloudinary is initialized with runtime env vars
-    initCloudinary();
-
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const file = formData.get("file") as File;
 
     if (!file) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
 
-    // Convert file to buffer
-    const buffer = Buffer.from(await file.arrayBuffer());
-    console.log("Uploading file:", file.name, file.type, buffer.byteLength, "bytes");
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const timestamp = Date.now();
+    const fileName = `${timestamp}-${file.name}`;
+    const key = `leftovers_posts/${fileName}`;
 
-    // Create OS-safe temporary file path
-    const tempFilePath = path.join(os.tmpdir(), `${Date.now()}-${file.name}`);
-    await writeFile(tempFilePath, buffer);
-    console.log("Temporary file written:", tempFilePath);
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type,
+        
+      })
+    );
 
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(tempFilePath, {
-      folder: "leftovers_posts",
-      resource_type: "auto", // supports images and videos
-    });
+    const publicUrl = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
+    console.log("S3 upload successful:", publicUrl);
 
-    console.log("Cloudinary upload successful:", result.secure_url);
-    
-console.log("Cloudinary envs:", {
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-    return NextResponse.json({
-      success: true,
-      url: result.secure_url,
-      type: result.resource_type,
-      public_id: result.public_id,
-    });
-  } catch (err) {
-    console.error("Upload failed:", err);
-    return NextResponse.json({ success: false, error: (err as Error).message }, { status: 500 });
+    return NextResponse.json({ success: true, media_url: publicUrl });
+  } catch (err: any) {
+    console.error("S3 Upload Error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
