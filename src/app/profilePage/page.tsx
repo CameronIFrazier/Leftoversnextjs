@@ -6,6 +6,9 @@ import GradientBorder from "../components/ui/GradientBorder";
 import { SponsorsList } from "../components/ui/SponsorsList";
 import { PeopleYouMayKnow } from "../components/ui/PeopleYouMayKnow";
 import { IconEdit, IconPhoto, IconTrash } from "@tabler/icons-react";
+import Link from "next/link";
+import { jwtDecode } from "jwt-decode";
+
 interface Post {
   id: number;
   title: string;
@@ -78,67 +81,83 @@ export default function ProfilePage() {
     }, 5000); // Start fading 300ms before the 5 second mark
   };
 
-  useEffect(() => {
-    async function fetchUserData() {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+    useEffect(() => {
+        async function fetchUserData() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
 
-      try {
-        // Fetch username
-        const resUser = await fetch("/api/getUserName", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const dataUser = await resUser.json();
-        if (dataUser.userName) setuserName(dataUser.userName);
+            try {
+                const decoded: any = jwtDecode(token);
+                const email = decoded.email;
+                const headers = { Authorization: `Bearer ${token}` };
 
-        // Fetch profile picture
-        const resPfp = await fetch("/api/getUserPfp", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const dataPfp = await resPfp.json();
-        if (dataPfp.profilePic) setProfilePic(dataPfp.profilePic);
+                const idRes = await fetch(`/api/getUserIdByEmail?email=${email}`, { headers });
+                const idData = await idRes.json();
+                if (!idData.success) return;
+                const id = idData.id;
+                setUserId(id);
 
-        // Fetch bio
-        const resBio = await fetch("/api/getUserBio", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const dataBio = await resBio.json();
-        if (dataBio.bio) setBio(dataBio.bio);
+                // Followers
+                const fRes = await fetch(`/api/getFollowers?userId=${id}`, { headers });
+                if (fRes.ok) {
+                    const data = await fRes.json();
+                    setFollowersCount(data.followers.length);
+                }
 
-        // Fetch highlight
-        const resHighlight = await fetch("/api/getUserHighlight", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const dataHighlight = await resHighlight.json();
-        if (dataHighlight.highlight) setHighlight(dataHighlight.highlight);
+                // Following
+                const gRes = await fetch(`/api/getFollowing?userId=${id}`, { headers });
+                if (gRes.ok) {
+                    const data = await gRes.json();
+                    setFollowingCount(data.following.length);
+                }
 
-        // 🔹 Fetch user posts
-        if (dataUser.userName) {
-          const resPosts = await fetch(
-            `/api/getUserPosts?username=${dataUser.userName}`
-          );
-          const dataPosts = await resPosts.json();
-          setPosts(dataPosts);
+                // Username
+                const resUser = await fetch("/api/getUserName", { headers });
+                const dataUser = await resUser.json();
+                if (dataUser.userName) setuserName(dataUser.userName);
+
+                // Profile picture
+                const resPfp = await fetch("/api/getUserPfp", { headers });
+                const dataPfp = await resPfp.json();
+                if (dataPfp.profilePic) setProfilePic(dataPfp.profilePic);
+
+                // Bio
+                const resBio = await fetch("/api/getUserBio", { headers });
+                const dataBio = await resBio.json();
+                if (dataBio.bio) setBio(dataBio.bio);
+
+                // Highlight
+                const resHighlight = await fetch("/api/getUserHighlight", { headers });
+                const dataHighlight = await resHighlight.json();
+                if (dataHighlight.highlight) setHighlight(dataHighlight.highlight);
+
+                // Posts
+                if (dataUser.userName) {
+                    const resPosts = await fetch(`/api/getUserPosts?username=${dataUser.userName}`);
+                    const dataPosts = await resPosts.json();
+                    setPosts(dataPosts);
+                }
+
+                // Comments
+                try {
+                    const resComments = await fetch("/api/getComments");
+                    if (resComments.ok) {
+                        const dataComments = await resComments.json();
+                        setComments(dataComments);
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch comments:", err);
+                }
+            } catch (err) {
+                console.error("Failed to fetch user data:", err);
+            }
         }
-        // 🔹 Fetch comments for user's posts (all comments; we'll filter client-side)
-        try {
-          const resComments = await fetch('/api/getComments');
-          if (resComments.ok) {
-            const dataComments = await resComments.json();
-            setComments(dataComments);
-          }
-        } catch (err) {
-          console.error('Failed to fetch comments:', err);
-        }
-      } catch (err) {
-        console.error("Failed to fetch user data:", err);
-      }
-    }
 
-    fetchUserData();
-  }, []);
+        fetchUserData();
+    }, []);
 
-  // Save bio to backend
+
+    // Save bio to backend
   const saveBio = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -278,6 +297,19 @@ export default function ProfilePage() {
     comments.filter((c: Comment) => c.parent_comment_id === parentId);
 
 
+    const getLoggedInUserEmail = (): string | null => {
+        const token = localStorage.getItem("token");
+        if (!token) return null;
+        try {
+            const decoded: any = jwtDecode(token);
+            return decoded.email || null;
+        } catch (err) {
+            console.error("Failed to decode token:", err);
+            return null;
+        }
+    };
+
+
   return (
     <section className="w-full flex flex-col items-center bg-black text-white">
       {/* Toast Notification */}
@@ -345,9 +377,14 @@ export default function ProfilePage() {
                   </button>
 
                   <div className="flex gap-2 text-white text-sm">
-                      <span><strong>{followersCount}</strong> Followers</span>
-                      <span><strong>{followingCount}</strong> Following</span>
+                      <Link href={`/users/${userId}/followers`} className="hover:underline">
+                          <strong>{followersCount}</strong> Followers
+                      </Link>
+                      <Link href={`/users/${userId}/following`} className="hover:underline">
+                          <strong>{followingCount}</strong> Following
+                      </Link>
                   </div>
+
               </div>
 
 
