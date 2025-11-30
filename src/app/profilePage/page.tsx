@@ -148,40 +148,29 @@ const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local 
 
 const handleUpload = async (file: File) => {
   try {
-    const res = await fetch("/api/upload-url", {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fileName: file.name,
-        fileType: file.type,
-        size: file.size
-      }),
+      body: formData,
     });
 
-    const { uploadUrl, fileUrl } = await res.json();
+    const data = await res.json();
 
-    if (!uploadUrl || !fileUrl) {
-      throw new Error("No signed URL returned");
+    if (!data.success || !data.fileUrl) {
+      throw new Error(data.error || "Upload failed");
     }
 
-    // Upload directly to AWS using the signed URL
-    await fetch(uploadUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": file.type
-      },
-      body: file,
-    });
-
-    // Save the public URL to state
-    setMediaUrl(fileUrl);
-
-    console.log("Uploaded Successfully:", fileUrl);
+    setMediaUrl(data.fileUrl); // save public URL
+    console.log("Uploaded Successfully:", data.fileUrl);
+    showToast("Upload successful!");
   } catch (err) {
     console.error("Upload failed:", err);
     showToast("Upload failed: " + (err as Error).message);
   }
 };
+
 
 
 

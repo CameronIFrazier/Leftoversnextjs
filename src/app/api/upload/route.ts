@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-// Hardcoded bucket name
-const BUCKET_NAME = "leftoversnextjsbucket";
-
 const s3 = new S3Client({
-  region: process.env.AWS_REGION!, // still use env for credentials and region
+  region: process.env.AWS_REGION!,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
@@ -21,30 +18,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const timestamp = Date.now();
-    const fileName = `${timestamp}-${file.name}`;
-    const key = `leftovers_posts/${fileName}`;
+    const arrayBuffer = await file.arrayBuffer(); // convert File to ArrayBuffer
+    const buffer = Buffer.from(arrayBuffer);      // convert to Node.js Buffer
 
-    // Upload to S3
+    const key = `leftovers_posts/${Date.now()}-${file.name}`;
+
     await s3.send(
       new PutObjectCommand({
-        Bucket: BUCKET_NAME,
+        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
         Key: key,
-        Body: buffer,
+        Body: buffer,          // use Buffer here
         ContentType: file.type,
-        ACL: undefined, // don't include ACL if your bucket doesn't allow it
       })
     );
 
-    // Public URL
-    const publicUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
-    console.log("S3 upload successful:", publicUrl);
+    const fileUrl = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
 
-    return NextResponse.json({ success: true, media_url: publicUrl });
+    return NextResponse.json({ success: true, fileUrl });
   } catch (err: any) {
-    console.error("S3 Upload Error:", err);
+    console.error("Upload API Error:", err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
