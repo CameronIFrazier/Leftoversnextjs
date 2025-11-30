@@ -1,53 +1,49 @@
-// src/app/api/upload/route.ts
+// /app/api/upload-url/route.ts
 import { NextResponse } from "next/server";
-import AWS from "aws-sdk";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-export const runtime = "nodejs";
-
-const s3 = new AWS.S3({
-  region: process.env.AWS_REGION,
+const s3 = new S3Client({
+  region: process.env.AWS_REGION!,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
 });
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const { fileName, fileType, size } = await req.json();
 
-    if (!file) {
-      return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
+    if (!fileName || !fileType) {
+      return NextResponse.json({ error: "Missing file data" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const key = `posts/${Date.now()}-${file.name}`;
+    // Optional: prevent 2GB videos from kids
+    const MAX_MB = 200;
+    if (size > MAX_MB * 1024 * 1024) {
+      return NextResponse.json(
+        { error: `File too large. Max allowed is ${MAX_MB}MB.` },
+        { status: 413 }
+      );
+    }
 
-    await s3
-      .putObject({
-        Bucket: process.env.S3_BUCKET_NAME!,
-        Key: key,
-        Body: buffer,
-        ContentType: file.type,
-        ACL: "public-read",
-      })
-      .promise();
+    const key = `leftovers_posts/${Date.now()}-${fileName}`;
 
-    const media_url = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
-
-    return NextResponse.json({ success: true, media_url });
-  } catch (err) {
-    console.error("Upload failed:", err);
-    return NextResponse.json({
-      success: false,
-      error: err instanceof Error ? err.message : "Unknown error",
+    const command = new PutObjectCommand({
+      Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
+      Key: key,
+      ContentType: fileType,
     });
+
+    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
+
+    return NextResponse.json({
+      success: true,
+      uploadUrl: signedUrl,
+      fileUrl: `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`,
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

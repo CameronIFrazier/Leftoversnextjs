@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import mysql from "mysql2/promise";
+import mysql, { RowDataPacket } from "mysql2/promise";
 
 export async function POST(req: Request) {
   try {
@@ -10,7 +10,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
-    // Connect to MySQL (Railway)
     const db = await mysql.createConnection({
       host: process.env.MYSQL_HOST,
       user: process.env.MYSQL_USER,
@@ -24,9 +23,16 @@ export async function POST(req: Request) {
       [title, description || "", userName, mediaUrl || null]
     );
 
+    
+const [rows] = await db.query<RowDataPacket[]>(
+  "SELECT * FROM posts WHERE id = ?",
+  [(result as any).insertId]
+);
+
+
     await db.end();
 
-    return NextResponse.json({ success: true, postId: (result as any).insertId });
+    return NextResponse.json({ success: true, post: rows[0] }); // send the new post
   } catch (err: any) {
     console.error("DB Error:", err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
@@ -36,10 +42,11 @@ export async function POST(req: Request) {
 export async function GET() {
   try {
     const db = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME,
+      host: process.env.MYSQL_HOST,
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE,
+      port: Number(process.env.MYSQL_PORT),
     });
 
     const [rows] = await db.query("SELECT * FROM posts ORDER BY created_at DESC");

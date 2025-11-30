@@ -151,23 +151,32 @@ const handleUpload = async (file: File) => {
     const res = await fetch("/api/upload-url", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fileName: file.name, fileType: file.type }),
+      body: JSON.stringify({
+        fileName: file.name,
+        fileType: file.type,
+        size: file.size
+      }),
     });
 
-    const { url, key } = await res.json();
-    if (!url || !key) throw new Error("Failed to get signed URL");
+    const { uploadUrl, fileUrl } = await res.json();
 
-    await fetch(url, {
+    if (!uploadUrl || !fileUrl) {
+      throw new Error("No signed URL returned");
+    }
+
+    // Upload directly to AWS using the signed URL
+    await fetch(uploadUrl, {
       method: "PUT",
-      headers: { "Content-Type": file.type },
+      headers: {
+        "Content-Type": file.type
+      },
       body: file,
     });
 
-    // Save S3 URL
-    const publicUrl = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
-    setMediaUrl(publicUrl);
-    console.log("Uploaded to S3:", publicUrl);
+    // Save the public URL to state
+    setMediaUrl(fileUrl);
 
+    console.log("Uploaded Successfully:", fileUrl);
   } catch (err) {
     console.error("Upload failed:", err);
     showToast("Upload failed: " + (err as Error).message);
@@ -388,34 +397,7 @@ const handleCreatePost = async () => {
     onChange={async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
-
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    // Read response as text first to avoid JSON parse errors
-    const text = await res.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      throw new Error(`Server returned non-JSON response: ${text}`);
-    }
-
-    if (data.success && data.media_url) {
-      setMediaUrl(data.media_url);
-      console.log("Upload successful:", data.media_url);
-    } else {
-      console.error("Upload failed:", data.error || "Unknown error");
-    }
-  } catch (err) {
-    console.error("Upload error:", err);
-  }
+  await handleUpload(file);
 }}
   />
 
@@ -456,15 +438,16 @@ const handleCreatePost = async () => {
           <p>{description || ""}</p>
 
           {media_url && (
-            media_url.endsWith(".mp4") ? (
-              <video controls className="mt-2 rounded-lg w-full">
-                <source src={media_url} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            ) : (
-              <img src={media_url} alt={title || "Post media"} className="mt-2 rounded-lg w-full" />
-            )
-          )}
+  /\.(mp4|mov|webm)$/i.test(media_url) ? (
+    <video controls className="mt-2 rounded-lg w-full">
+      <source src={media_url} type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+  ) : (
+    <img src={media_url} alt={title || "Post media"} className="mt-2 rounded-lg w-full" />
+  )
+)}
+
         </div>
       );
     })
