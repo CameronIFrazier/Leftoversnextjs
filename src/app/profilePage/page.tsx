@@ -18,6 +18,7 @@ interface Post {
 }
 //force redeploy
 export default function ProfilePage() {
+  const [videoLoading, setVideoLoading] = useState<Record<number, boolean>>({});
 const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local preview
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState("");
@@ -34,6 +35,8 @@ const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local 
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 🔹 NEW — toast notification
   const [toastVisible, setToastVisible] = useState(false); // 🔹 NEW — toast visibility for fade animation
   const [isCreatingPost, setIsCreatingPost] = useState(false); // 🔹 NEW — post creation loading state
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   useEffect(() => {
     // Add click outside listener to turn off edit mode
@@ -192,8 +195,9 @@ const handleUpload = async (file: File) => {
 
 const handleCreatePost = async () => {
   if (!title || !userName) return;
-
-  const res = await fetch("/api/posts", {
+  setIsCreatingPost(true);
+  try {
+    const res = await fetch("/api/posts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -203,13 +207,10 @@ const handleCreatePost = async () => {
       mediaUrl,
     }),
   });
+    const data = await res.json();
 
-  const data = await res.json();
-
-  if (data.success) {
-    console.log("Post created:", data.post);
-
-    // 🔹 Immediately show the new post
+    if (data.success) {
+    // Add the new post to the posts state immediately
     setPosts((prev) => [data.post, ...prev]);
 
     // Reset input fields
@@ -222,6 +223,12 @@ const handleCreatePost = async () => {
     console.error("Failed to create post:", data.error);
     showToast("Failed to create post.");
   }
+  } catch (err) {
+    console.error("Error creating post:", err);
+    showToast("Error creating post.");
+  } finally {
+    setIsCreatingPost(false);
+  }
 };
 
 
@@ -232,8 +239,10 @@ const handleCreatePost = async () => {
 
 
 
+
+
   return (
-    <section className="w-full flex flex-col items-center bg-black text-white">
+    <section className="w-full flex flex-col items-center bg-black text-white min-h-screen">
       {/* Toast Notification */}
       {toastMessage && (
         <div className={`fixed top-4 right-4 bg-purple-400 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 ease-in-out transform ${
@@ -254,7 +263,7 @@ const handleCreatePost = async () => {
           <section className="profile-section w-full min-h-[400px] bg-cover bg-center flex flex-col p-4 items-center text-white rounded-lg bg-black-300">
             {userName ? (
               <h2 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 mb-4 pl-4 pr-4">
-                Welcome back, {userName} 
+                Welcome, {userName} 
               </h2>
             ) : (
               <p className="mb-4">Loading username...</p>
@@ -294,55 +303,62 @@ const handleCreatePost = async () => {
                   accept="image/*"
                   className="hidden"
                   id="avatar-upload"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-
                     const formData = new FormData();
                     formData.append("pfp", file);
 
                     const token = localStorage.getItem("token");
                     if (!token) return;
 
-                    fetch("/api/updatePfp", {
-                      method: "POST",
-                      headers: { Authorization: `Bearer ${token}` },
-                      body: formData,
-                    })
-                      .then((res) => res.json())
-                      .then((data) => {
-                        if (data.success) {
-                          showToast("Profile picture updated!");
-                          setProfilePic(data.url);
-                        } else {
-                          console.error("Failed to update pfp:", data.error);
-                        }
-                      })
-                      .catch((err) => console.error("Upload error:", err));
+                    // show upload spinner
+                    setIsUploadingAvatar(true);
+                    try {
+                      const res = await fetch("/api/updatePfp", {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` }, // no Content-Type here
+                        body: formData,
+                      });
+
+                      const data = await res.json();
+                      if (data.success && data.url) {
+                        setProfilePic(data.url);
+                        showToast("Profile picture updated!");
+                      } else {
+                        console.error("Failed to update pfp:", data.error || data);
+                        showToast("Failed to update profile picture.");
+                      }
+                    } catch (err) {
+                      console.error("Upload error:", err);
+                      showToast("Profile picture upload failed");
+                    } finally {
+                      setIsUploadingAvatar(false);
+                    }
+
                   }}
                 />
                 
                 {/* Avatar Action Buttons */}
-                <div className="flex items-center gap-3">
-                  {/* Upload Avatar Button */}
-                  <button
-                    onClick={() => document.getElementById('avatar-upload')?.click()}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
-                  >
-                    <IconPhoto className="h-5 w-5" />
-                    Upload
-                  </button>
-                  
-                  {/* Delete Avatar Button */}
-                  {profilePic && (
-                    <button
-                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                    >
-                      <IconTrash className="h-5 w-5" />
-                      Delete
-                    </button>
-                  )}
-                </div>
+               <div className="flex items-center gap-3">
+  {/* Upload Avatar Button */}
+  <button
+    onClick={() => document.getElementById('avatar-upload')?.click()}
+    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+    disabled={isUploadingAvatar}
+  >
+    <IconPhoto className="h-5 w-5" />
+    {isUploadingAvatar ? (
+      <>
+        <span className="ml-1">Uploading…</span>
+        <span className="ml-2 inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+      </>
+    ) : (
+      "Upload"
+    )}
+  </button>
+</div>
+
               </div>
             )}
 
@@ -403,7 +419,7 @@ const handleCreatePost = async () => {
     onChange={async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
-
+  setIsUploadingMedia(true);
   try {
     const formData = new FormData();
     formData.append("file", file);
@@ -430,6 +446,8 @@ const handleCreatePost = async () => {
     }
   } catch (err) {
     console.error("Upload error:", err);
+  } finally {
+    setIsUploadingMedia(false);
   }
 }}
   />
@@ -440,15 +458,32 @@ const handleCreatePost = async () => {
     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
   >
     <IconPhoto className="h-5 w-5" />
-    {mediaUrl ? "Uploaded!" : "Upload Media"}
+    {isUploadingMedia ? (
+      <>
+        <span className="ml-1">Uploading…</span>
+        <span className="ml-2 inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+      </>
+    ) : mediaUrl ? (
+      "Uploaded!"
+    ) : (
+      "Upload Media"
+    )}
   </button>
 
   {/* Create Post Button */}
   <button
     onClick={handleCreatePost}
     className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
+    disabled={isUploadingMedia || isCreatingPost}
   >
-    Create Post
+    {isCreatingPost ? (
+      <>
+        <span className="mr-2 inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+        Creating...
+      </>
+    ) : (
+      "Create Post"
+    )}
   </button>
 </section>
 
@@ -471,15 +506,43 @@ const handleCreatePost = async () => {
           <p>{description || ""}</p>
 
           {media_url && (
-            media_url.endsWith(".mp4") ? (
-              <video controls className="mt-2 rounded-lg w-full">
-                <source src={media_url} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            ) : (
-              <img src={media_url} alt={title || "Post media"} className="mt-2 rounded-lg w-full" />
-            )
-          )}
+  media_url.endsWith(".mp4") ? (
+    <div className="relative mt-2 w-full">
+      
+      {/* Spinner Overlay */}
+      {videoLoading[id] && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-lg z-10">
+          <div className="animate-spin h-10 w-10 border-4 border-white border-t-transparent rounded-full"></div>
+        </div>
+      )}
+
+      <video
+        controls
+        className="rounded-lg w-full"
+        onWaiting={() =>
+          setVideoLoading((prev) => ({ ...prev, [id]: true }))
+        }
+        onCanPlayThrough={() =>
+          setVideoLoading((prev) => ({ ...prev, [id]: false }))
+        }
+        onLoadedData={() =>
+          setVideoLoading((prev) => ({ ...prev, [id]: false }))
+        }
+      >
+        <source src={media_url} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  ) : (
+    <img
+      src={media_url}
+      alt={title || "Post media"}
+      className="mt-2 rounded-lg w-full"
+    />
+  )
+)}
+
+
         </div>
       );
     })

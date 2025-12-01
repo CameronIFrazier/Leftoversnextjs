@@ -35,7 +35,7 @@ export function SponsorsList({ sponsors = mockSponsors, count = 3 }) {
     <div className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-white">Featured Sponsors</h3>
-        <span className="text-[10px] uppercase tracking-widest text-indigo-300/80">Random {count}</span>
+        
       </div>
       <ul className="space-y-3">
         {randomSelection.map((s) => (
