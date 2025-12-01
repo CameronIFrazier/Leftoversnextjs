@@ -519,8 +519,20 @@ useEffect(() => {
                 <p className="text-sm text-gray-200">{post.description}</p>
 
                 {post.media_url && (
-                  <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
-                )}
+  post.media_url.endsWith(".mp4") ? (
+    <video
+      src={post.media_url}
+      controls
+      className="mt-2 rounded-lg max-h-96 w-full"
+    />
+  ) : (
+    <img
+      src={post.media_url}
+      alt="Post media"
+      className="mt-2 rounded-lg"
+    />
+  )
+)}
               </div>
 {/* Like Button Section */}
 <div className="flex items-center gap-3 mb-3">
