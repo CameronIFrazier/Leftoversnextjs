@@ -81,10 +81,12 @@ export default function UserProfilePage() {
     };
   }, [userId]);
 
-  const avatarUrl = useMemo(
-    () => bio?.profile_pic_url || user?.profile_pic_url || "",
-    [bio?.profile_pic_url, user?.profile_pic_url]
-  );
+  const avatarUrl = useMemo(() => {
+  if (bio?.profile_pic_url && bio.profile_pic_url.trim() !== "") return bio.profile_pic_url;
+  if (user?.profile_pic_url && user.profile_pic_url.trim() !== "") return user.profile_pic_url;
+  return null; // fallback to initials
+}, [bio?.profile_pic_url, user?.profile_pic_url]);
+
 
 
   const displayName = useMemo(() => {
@@ -114,10 +116,10 @@ export default function UserProfilePage() {
         <div className="flex items-center gap-4 mb-8">
           <div className="h-20 w-20 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center text-2xl font-bold">
             {avatarUrl ? (
-              <img src={avatarUrl} alt={`${displayName} profile`} className="h-full w-full object-cover" />
-            ) : (
-              (displayName[0]?.toUpperCase() ?? "U")
-            )}
+    <img src={avatarUrl} alt={`${displayName} profile`} className="h-full w-full object-cover" />
+  ) : (
+    displayName[0]?.toUpperCase() ?? "U"
+  )}
           </div>
           <div>
             <h1 className="text-2xl font-bold">{displayName}</h1>
@@ -147,11 +149,18 @@ export default function UserProfilePage() {
                   {post.title && <h3 className="font-semibold mb-1">{post.title}</h3>}
                   {post.description && <p className="text-gray-300 whitespace-pre-wrap">{post.description}</p>}
                   {post.media_url && (
-                    <div className="mt-3 rounded-xl overflow-hidden border border-gray-800">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={post.media_url} alt="" className="w-full object-cover" />
-                    </div>
-                  )}
+  <div className="mt-3 rounded-xl overflow-hidden border border-gray-800">
+    {post.media_url.endsWith(".mp4") ? (
+      <video controls className="w-full object-cover rounded-xl">
+        <source src={post.media_url} type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    ) : (
+      <img src={post.media_url} alt="" className="w-full object-cover rounded-xl" />
+    )}
+  </div>
+)}
+
                   {post.created_at && (
                     <p className="mt-2 text-xs text-gray-500">
                       {new Date(post.created_at).toLocaleString()}
