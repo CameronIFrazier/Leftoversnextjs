@@ -5,7 +5,6 @@ interface SuggestionItem {
   id: number | string;
   name: string;
   handle?: string;
-  mutuals?: number;
   avatar?: string | null;
   username?: string;
 }
@@ -15,14 +14,13 @@ export function PeopleYouMayKnow() {
   const [following, setFollowing] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // Fetch suggestions from /api/users and pick up to 5 random users
     const fetchSuggestions = async () => {
       try {
         const resUsers = await fetch('/api/users');
         const usersJson = await resUsers.json();
         const allUsers = usersJson.users || [];
 
-        // Shuffle (Fisher-Yates)
+        // Shuffle
         const candidates = [...allUsers];
         for (let i = candidates.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -34,13 +32,12 @@ export function PeopleYouMayKnow() {
           name: u.name || `${u.firstname || ''} ${u.lastname || ''}`.trim() || u.username,
           handle: u.username,
           avatar: u.avatar || u.profile_pic || null,
-          mutuals: Math.floor(Math.random() * 10), // Random mutuals for demo
           username: u.username,
         }));
 
         setSuggestions(picked);
       } catch (e) {
-        console.error('Failed to load suggestions:', e);
+        console.error("Failed to load suggestions:", e);
       }
     };
 
@@ -67,21 +64,22 @@ export function PeopleYouMayKnow() {
               </div>
             </div>
 
-            <div className="flex flex-col items-end">
-              <span className="text-xs text-purple-300">{s.mutuals ? `${s.mutuals} mutuals` : 'New'}</span>
-              <button
-                onClick={() => setFollowing((f) => ({ ...f, [String(s.id)]: !f[String(s.id)] }))}
-                className={`mt-2 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                  following[String(s.id)] 
-                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                }`}
-              >
-                {following[String(s.id)] ? 'Following' : 'Follow'}
-              </button>
-            </div>
+            <button
+              onClick={() => setFollowing((f) => ({ ...f, [String(s.id)]: !f[String(s.id)] }))}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                following[String(s.id)]
+                  ? "bg-gray-700 text-white hover:bg-gray-600"
+                  : "bg-indigo-600 text-white hover:bg-indigo-700"
+              }`}
+            >
+              {following[String(s.id)] ? "Following" : "Follow"}
+            </button>
           </div>
         ))}
+
+        {suggestions.length === 0 && (
+          <p className="text-sm text-purple-300 text-center">No suggestions found</p>
+        )}
       </div>
     </div>
   );
