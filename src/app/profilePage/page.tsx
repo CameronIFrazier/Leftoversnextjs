@@ -6,19 +6,23 @@ import GradientBorder from "../components/ui/GradientBorder";
 import { SponsorsList } from "../components/ui/SponsorsList";
 import { PeopleYouMayKnow } from "../components/ui/PeopleYouMayKnow";
 import { IconEdit, IconPhoto, IconTrash } from "@tabler/icons-react";
-import UploadForm from "../components/ui/UploadForm";
 interface Post {
   id: number;
   title: string;
   description: string;
    media_url?: string | null;
   created_at?: string;
-   username?: string | null; 
-  avatar?: string | null;   
 }
-//force redeploy
+interface Comment {
+  id: number;
+  post_id: number;
+  comment_text: string;
+  parent_comment_id: number | null;
+  created_at?: string | null;
+  username?: string | null;
+  avatar?: string | null;
+}
 export default function ProfilePage() {
-const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local preview
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [highlight, setHighlight] = useState<string | null>(null);
@@ -28,7 +32,6 @@ const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local 
   const [title, setTitle] = useState(""); // 🔹 NEW — new post title
   const [description, setDescription] = useState(""); // 🔹 NEW — new post desc
   const [media, setMedia] = useState<File | null>(null); // 🔹 NEW — new post file
-  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
   const [isEditMode, setIsEditMode] = useState(false); // 🔹 NEW — edit mode state
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 🔹 NEW — toast notification
@@ -159,77 +162,118 @@ const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local 
     }
   };
 
+  // 🔹 Create new post
+  const handleCreatePost = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-const handleUpload = async (file: File) => {
-  try {
-    const res = await fetch("/api/upload-url", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fileName: file.name, fileType: file.type }),
-    });
+    // Start loading state
+    setIsCreatingPost(true);
 
-    const { url, key } = await res.json();
-    if (!url || !key) throw new Error("Failed to get signed URL");
+    const media_url = media ? URL.createObjectURL(media) : null;
 
-    await fetch(url, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file,
-    });
+    // 🔹 Optional: temporary media handling (can later integrate real upload)
+    
 
-    // Save S3 URL
-    const publicUrl = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
-    setMediaUrl(publicUrl);
-    console.log("Uploaded to S3:", publicUrl);
+    try {
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, description, media_url, username: userName, }),
+      });
 
-  } catch (err) {
-    console.error("Upload failed:", err);
-    showToast("Upload failed: " + (err as Error).message);
-  }
-};
+      const data = await res.json();
 
+      if (data.success) {
+        // Update post list immediately
+        const newPost = data.post
+          ? data.post
+          : { id: data.postId, title, description, media_url, username: userName, created_at: new Date().toISOString(), avatar: profilePic };
 
+        setPosts([newPost, ...posts]);
+        // Reset form
+        setTitle("");
+        setDescription("");
+        setMedia(null);
+        
+        // Scroll to the posts section after successful post creation
+        setTimeout(() => {
+          const postsSection = document.getElementById("past-post");
+          if (postsSection) {
+            // Get the posts section's position
+            const rect = postsSection.getBoundingClientRect();
+            const absoluteTop = window.pageYOffset + rect.top;
+            
+            // Add some offset to show the title and part of the first post
+            const offset = 150;
+            
+            window.scrollTo({
+              top: absoluteTop - offset,
+              behavior: "smooth"
+            });
+          }
+        }, 800); // Slower delay for better UX
+        
+        showToast("Post created successfully!");
+      } else {
+        showToast("Failed to create post.");
+      }
+    } catch (err) {
+      showToast("Error creating post.");
+    } finally {
+      // End loading state
+      setIsCreatingPost(false);
+    }
+  };
 
-const handleCreatePost = async () => {
-  if (!title || !userName) return;
+  // ----- Comments handling (for posts on this profile) -----
+  const [newComments, setNewComments] = useState<{ [key: number]: string }>({});
+  const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
 
-  const res = await fetch("/api/posts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      title,
-      description,
-      userName,
-      mediaUrl,
-    }),
-  });
+  const addCommentToDB = async (postId: number, comment: string, parentCommentId: number | null = null) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-  const data = await res.json();
+      await fetch("/api/addComment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ postId, comment, parentCommentId, username: userName }),
+      });
 
-  if (data.success) {
-    console.log("Post created:", data.post);
+      // reload comments
+      const fetched = await (await fetch("/api/getComments")).json();
+      setComments(fetched);
+    } catch (err) {
+      console.error("Failed to add comment:", err);
+    }
+  };
 
-    // 🔹 Immediately show the new post
-    setPosts((prev) => [data.post, ...prev]);
+  const handleCommentSubmit = async (postId: number) => {
+    const comment = newComments[postId];
+    if (!comment?.trim()) return;
 
-    // Reset input fields
-    setTitle("");
-    setDescription("");
-    setMediaUrl(null);
+    await addCommentToDB(postId, comment);
+    setNewComments((prev: { [key: number]: string }) => ({ ...prev, [postId]: "" }));
+  };
 
-    showToast("Post created!");
-  } else {
-    console.error("Failed to create post:", data.error);
-    showToast("Failed to create post.");
-  }
-};
+  const handleReplySubmit = async (postId: number, parentId: number) => {
+    const replyText = replyInputs[parentId];
+    if (!replyText?.trim()) return;
 
+    await addCommentToDB(postId, replyText, parentId);
+    setReplyInputs((prev: { [key: number]: string }) => ({ ...prev, [parentId]: "" }));
+    setReplyingTo(null);
+  };
 
+  const getTopLevelComments = (postId: number) =>
+    comments.filter((c: Comment) => c.post_id === postId && c.parent_comment_id === null);
 
-
-
-
-
+  const getReplies = (parentId: number) =>
+    comments.filter((c: Comment) => c.parent_comment_id === parentId);
 
 
   return (
@@ -371,122 +415,145 @@ const handleCreatePost = async () => {
           </section>
 
           {/* 🔹 Post Creation Section */}
-          {/* 🔹 Post Creation Section */}
-{/* 🔹 Post Creation Section */}
-{/* 🔹 Post Creation Section */}
-<section className="h-auto rounded-lg mt-5 flex flex-col p-4 bg-black">
-  <h1 className="text-lg font-semibold mb-3">New Post</h1>
-
-  {/* Title */}
-  <input
-    value={title}
-    onChange={(e) => setTitle(e.target.value)}
-    placeholder="Title"
-    className="w-full p-2 mb-2 rounded bg-indigo-900"
-  />
-
-  {/* Description */}
-  <textarea
-    value={description}
-    onChange={(e) => setDescription(e.target.value)}
-    placeholder="Description"
-    className="w-full p-2 mb-2 rounded bg-indigo-900"
-    rows={4}
-  />
-
-  {/* File Upload */}
-  <input
-    type="file"
-    id="post-media-upload"
-    className="hidden"
-    accept="image/*,video/*"
-    onChange={async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    // Read response as text first to avoid JSON parse errors
-    const text = await res.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      throw new Error(`Server returned non-JSON response: ${text}`);
-    }
-
-    if (data.success && data.media_url) {
-      setMediaUrl(data.media_url);
-      console.log("Upload successful:", data.media_url);
-    } else {
-      console.error("Upload failed:", data.error || "Unknown error");
-    }
-  } catch (err) {
-    console.error("Upload error:", err);
-  }
-}}
-  />
-
-  {/* Upload Button */}
-  <button
-    onClick={() => document.getElementById("post-media-upload")?.click()}
-    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
-  >
-    <IconPhoto className="h-5 w-5" />
-    {mediaUrl ? "Uploaded!" : "Upload Media"}
-  </button>
-
-  {/* Create Post Button */}
-  <button
-    onClick={handleCreatePost}
-    className="mt-2 px-4 py-2 bg-indigo-500 rounded-xl hover:bg-gradient-to-b from-indigo-500 to-purple-500 text-white w-auto self-center"
-  >
-    Create Post
-  </button>
-</section>
-
-
+          <section className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm mt-5 flex flex-col">
+            <h1 className="text-lg font-semibold mb-3">New Post</h1>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Title"
+              className="w-full p-2 mb-2 rounded bg-indigo-900"
+            />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Description"
+              className="w-full p-2 mb-2 rounded bg-indigo-900"
+              rows={4}
+            />
+            
+            <input
+              type="file"
+              id="post-media-upload"
+              className="hidden"
+              onChange={(e) => e.target.files && setMedia(e.target.files[0])}
+            />
+            
+            {/* Upload Media Button */}
+            <button
+              onClick={() => document.getElementById('post-media-upload')?.click()}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors mb-3 w-fit"
+            >
+              <IconPhoto className="h-5 w-5" />
+              {media ? `Selected: ${media.name}` : 'Upload Media'}
+            </button>
+            
+            <button
+              onClick={handleCreatePost}
+              disabled={isCreatingPost}
+              className={`mt-2 px-4 py-2 rounded-xl text-white w-auto self-center transition-colors ${
+                isCreatingPost 
+                  ? 'bg-gray-600 cursor-not-allowed' 
+                  : 'bg-indigo-500 hover:bg-gradient-to-b from-indigo-500 to-purple-500'
+              }`}
+            >
+              {isCreatingPost ? <LoadingDots /> : 'Create Post'}
+            </button>
+          </section>
 
               {/* Divider
             <div className="my-4 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div> */}
           {/* 🔹 Past Posts Section */}
-          <section className="w-[60%] mt-5">
-        {posts && posts.length > 0 ? (
-    posts.map((post) => {
-      // Skip any undefined/null posts just in case
-      if (!post) return null;
+          <section id="past-post" className="rounded-2xl border border-white/20 bg-black/40 p-4 shadow-sm mt-5 flex flex-col items-center justify-start">
+            <h1 className="text-2xl font-bold mb-4 text-white-300">Posts History</h1>
+            <div className="w-full flex flex-col gap-4">
+              {posts.length === 0 ? (
+                <LoadingDots />
+              ) : (
+                posts.map((post) => (
+                  <div key={post.id} className="-500 rounded-lg p-3 bg-indigo-900">
+                    <div className="flex items-center gap-3 mb-1">
+                      {profilePic ? (
+                        <img src={profilePic} alt={`${userName || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
+                      )}
+                      <div className="flex flex-col">
+                        {userName && <div className="text-sm text-gray-200">@{userName}</div>}
+                        {post.created_at && (
+                          <div className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString()}</div>
+                        )}
+                      </div>
+                    </div>
+                    <h2 className="font-bold">{post.title}</h2>
+                    <p>{post.description}</p>
+                    {post.media_url && (
+                      <img src={post.media_url} alt="Post media" className="mt-2 rounded-lg" />
+                    )}
 
-      const { id, title, description, media_url } = post;
+                    {/* Comments for this post */}
+                    <div className="mt-4">
+                      <h3 className="text-sm font-semibold mb-2">Comments</h3>
+                      {getTopLevelComments(post.id).length === 0 ? (
+                        <p className="text-gray-300 text-sm">No comments yet.</p>
+                      ) : (
+                        getTopLevelComments(post.id).map((c) => (
+                          <div key={c.id} className="mb-2">
+                            <div className="flex items-start gap-2">
+                              {c.avatar ? (
+                                <img src={c.avatar} alt={`${c.username || 'user'} avatar`} className="w-8 h-8 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">@</div>
+                              )}
+                              <div className="flex-1">
+                                <div className="text-sm font-semibold">{c.username ?? 'Unknown'}</div>
+                                <div className="text-xs text-gray-400">{c.created_at ? new Date(c.created_at).toLocaleString() : ''}</div>
+                                <div className="mt-1 text-white">{c.comment_text}</div>
 
-      return (
-        <div key={id} className="p-3 bg-indigo-900 rounded-lg mb-3">
-          <h2 className="font-bold">{title || "Untitled Post"}</h2>
-          <p>{description || ""}</p>
+                                <button type="button" onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)} className="text-sm text-blue-400 hover:text-blue-300 mt-1">Reply</button>
 
-          {media_url && (
-            media_url.endsWith(".mp4") ? (
-              <video controls className="mt-2 rounded-lg w-full">
-                <source src={media_url} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            ) : (
-              <img src={media_url} alt={title || "Post media"} className="mt-2 rounded-lg w-full" />
-            )
-          )}
-        </div>
-      );
-    })
-  ) : (
-    <p className="text-gray-400">No posts yet.</p>
-  )}
-      </section>
+                                {replyingTo === c.id && (
+                                  <div className="mt-2 flex gap-2 items-center">
+                                    <input type="text" value={replyInputs[c.id] || ''} onChange={(e) => setReplyInputs((prev) => ({ ...prev, [c.id]: e.target.value }))} placeholder="Write a reply..." className="flex-grow rounded-lg p-2 text-black" />
+                                    <button type="button" onClick={() => handleReplySubmit(post.id, c.id)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">Send</button>
+                                  </div>
+                                )}
+
+                                {/* Render replies */}
+                                {getReplies(c.id).length > 0 && (
+                                  <div className="ml-8 mt-2 space-y-2">
+                                    {getReplies(c.id).map((r) => (
+                                      <div key={r.id} className="flex gap-2 items-start">
+                                        {r.avatar ? (
+                                          <img src={r.avatar} alt={`${r.username || 'user'} avatar`} className="w-6 h-6 rounded-full object-cover" />
+                                        ) : (
+                                          <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">@</div>
+                                        )}
+                                        <div>
+                                          <div className="text-sm font-semibold">{r.username ?? 'Unknown'}</div>
+                                          <div className="text-xs text-gray-400">{r.created_at ? new Date(r.created_at).toLocaleString() : ''}</div>
+                                          <div className="text-white">{r.comment_text}</div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+
+                      {/* Add Comment Form */}
+                      <form onSubmit={(e) => { e.preventDefault(); handleCommentSubmit(post.id); }} className="mt-3 flex gap-2 items-center">
+                        <input type="text" value={newComments[post.id] || ''} onChange={(e) => setNewComments((prev) => ({ ...prev, [post.id]: e.target.value }))} placeholder="Write a comment..." className="flex-grow rounded-lg p-2 text-black" />
+                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">Post</button>
+                      </form>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
         </section>
 
         {/* Right side */}
