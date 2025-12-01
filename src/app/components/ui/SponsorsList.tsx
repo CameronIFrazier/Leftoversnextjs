@@ -16,6 +16,7 @@ const mockSponsors: Sponsor[] = [
   { id: "5", name: "WebDesign Pro", description: "Professional web design", href: "https://webdesignpro.com" },
   { id: "6", name: "AI Solutions", description: "Artificial intelligence tools", href: "https://aisolutions.com" },
 ];
+//force push
 
 function pickRandomSponsors(list: Sponsor[], count = 3): Sponsor[] {
   const unique = Array.from(new Map(list.map((s) => [s.id, s])).values());
