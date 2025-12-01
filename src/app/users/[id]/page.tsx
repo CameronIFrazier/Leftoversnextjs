@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
-import Link from "next/link";
 
 type UserCore = {
   id: number;
@@ -37,21 +36,20 @@ export default function UserProfilePage() {
   const [err, setErr] = useState<string | null>(null);
     const [isFollowing, setIsFollowing] = useState(false);
     const [followersCount, setFollowersCount] = useState(0);
-    const [followingCount, setFollowingCount] = useState(0);
-
 
     const getLoggedInUserEmail = (): string | null => {
         const token = localStorage.getItem("token");
         if (!token) return null;
         try {
             const decoded: any = jwtDecode(token);
-            console.log("Decoded token payload:", decoded);
-            return decoded.email || null;
+            console.log("Decoded token payload:", decoded); // check payload
+            return decoded.email || null; // ✅ use email instead of id
         } catch (err) {
             console.error("Failed to decode token:", err);
             return null;
         }
     };
+
 
 
     useEffect(() => {
@@ -60,7 +58,6 @@ export default function UserProfilePage() {
             if (!token) return;
 
             const headers = { Authorization: `Bearer ${token}` };
-
             const fRes = await fetch(`/api/getFollowers?userId=${userId}`, { headers });
             if (fRes.ok) {
                 const data = await fRes.json();
@@ -71,15 +68,8 @@ export default function UserProfilePage() {
                     setIsFollowing(data.followers.some((f: any) => f.email === loggedInUserEmail));
                 }
             }
-
-            const gRes = await fetch(`/api/getFollowing?userId=${userId}`, { headers });
-            if (gRes.ok) {
-                const data = await gRes.json();
-                setFollowingCount(data.following.length);
-            }
         })();
     }, [userId]);
-
 
     useEffect(() => {
     let alive = true;
@@ -213,18 +203,7 @@ export default function UserProfilePage() {
 
 
 
-          <p className="text-sm text-gray-400">
-              <Link href={`/users/${userId}/followers`} className="hover:underline">
-                  {followersCount} followers
-              </Link>
-          </p>
-
-          <p className="text-sm text-gray-400">
-              <Link href={`/users/${userId}/following`} className="hover:underline">
-                  {followingCount} following
-              </Link>
-          </p>
-
+          <p className="text-sm text-gray-400">{followersCount} followers</p>
 
 
           {/* Bio */}
