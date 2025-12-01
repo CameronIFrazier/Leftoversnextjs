@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import cloudinary, { initCloudinary } from "@/lib/cloudinary";
 import mysql, { RowDataPacket } from "mysql2/promise";
 import { verify } from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
@@ -24,6 +24,8 @@ export const POST = async (req: NextRequest) => {
   }
 
   try {
+    // Ensure cloudinary initialized with runtime envs
+    initCloudinary();
     const formData = await req.formData();
     const file = formData.get("pfp") as File | null;
     if (!file) {
@@ -31,15 +33,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-
-    // Setup S3 client
-    const s3 = new S3Client({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      },
-    });
+    const buffer = Buffer.from(arrayBuffer);
 
     // Connect to MySQL
     const connection = await mysql.createConnection({
@@ -57,24 +51,39 @@ export const POST = async (req: NextRequest) => {
     );
     const oldUrl = rows[0]?.profile_pic;
 
-    // Delete old uploaded PFP if exists and not a default
-    if (oldUrl && !oldUrl.includes("defaults/")) {
-      const oldKey = oldUrl.split(".com/")[1];
-      await s3.send(new DeleteObjectCommand({ Bucket: "leftoversnextjsbucket", Key: oldKey }));
+    // Delete old uploaded PFP from Cloudinary if exists
+    if (oldUrl && oldUrl.includes("cloudinary")) {
+      try {
+        // Extract public_id from Cloudinary URL
+        const publicId = oldUrl.split("/").pop()?.split(".")[0];
+        if (publicId) {
+          await cloudinary.uploader.destroy(`leftovers_pfps/${publicId}`);
+        }
+      } catch (deleteErr) {
+        console.error("Failed to delete old pfp from Cloudinary:", deleteErr);
+        // Continue anyway
+      }
     }
 
-    // Upload new file
-    const s3Key = `user-pfps/${file.name}`;
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: "leftoversnextjsbucket",
-        Key: s3Key,
-        Body: Buffer.from(arrayBuffer),
-        ContentType: file.type || undefined,
-      })
-    );
+    // Upload new file to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "leftovers_pfps",
+          resource_type: "auto",
+          use_filename: true,
+          unique_filename: true,
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
 
-    const newUrl = `https://leftoversnextjsbucket.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
+      uploadStream.end(buffer);
+    });
+
+    const newUrl = (uploadResult as any).secure_url;
 
     // Update MySQL
     await connection.execute("UPDATE users SET profile_pic = ? WHERE email = ?", [newUrl, email]);

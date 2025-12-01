@@ -116,13 +116,21 @@ function ShareDialog({
           <div className="text-sm font-semibold">{post.title}</div>
           <div className="text-sm text-white/80">{post.description}</div>
           {post.media_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={post.media_url}
-              alt="Post media"
-              className="mt-2 rounded-md max-h-60 object-cover"
-            />
-          )}
+  post.media_url.match(/\.(mp4|webm|mov|ogg)$/i) ? (
+    <video
+      src={post.media_url}
+      controls
+      className="mt-2 rounded-md max-h-60 w-full object-cover"
+    />
+  ) : (
+    <img
+      src={post.media_url}
+      alt="Post media"
+      className="mt-2 rounded-md max-h-60 object-cover"
+    />
+  )
+)}
+
         </div>
 
         <label className="text-sm block mb-1">Send to (username)</label>
@@ -769,46 +777,48 @@ export default function Home() {
                       {post.description}
                     </p>
 
-                    {post.media_url && (
-                      <img
-                        src={post.media_url}
-                        alt="Post media"
-                        className="mt-2 rounded-lg"
-                      />
-                    )}
-
-                    {/* Actions: Like + Share */}
-                    <div className="mt-3 flex items-center gap-3 mb-1">
-                      <button
-                        onClick={() => handleLikeToggle(post.id)}
-                        className={`px-3 py-1 rounded-lg font-semibold ${
-                          userLikedPosts.includes(post.id)
-                            ? "bg-purple-600 text-white"
-                            : "bg-indigo-600 text-white hover:bg-indigo-500"
-                        }`}
-                      >
-                        {userLikedPosts.includes(post.id)
-                          ? "❤️ Liked"
-                          : "🤍 Like"}
-                      </button>
-                      <span className="text-sm text-gray-300">
-                        {likes[post.id] || 0}{" "}
-                        {likes[post.id] === 1 ? "like" : "likes"}
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => openShare(post)}
-                        className="ml-auto rounded-lg border border-white/20 px-3 py-1.5 text-sm hover:bg-white/10"
-                      >
-                        Share
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Comments Section */}
-                  <div className="mt-3">
-                    <h3 className="font-semibold mb-2">Comments</h3>
+                {post.media_url && (
+  post.media_url.endsWith(".mp4") ? (
+    <video
+      src={post.media_url}
+      controls
+      className="mt-2 rounded-lg max-h-96 w-full"
+    />
+  ) : (
+    <img
+      src={post.media_url}
+      alt="Post media"
+      className="mt-2 rounded-lg"
+    />
+  )
+)}
+              </div>
+{/* Like Button Section */}
+<div className="flex items-center gap-3 mb-3">
+  <button
+    onClick={() => handleLikeToggle(post.id)}
+    className={`px-3 py-1 rounded-lg font-semibold ${
+      userLikedPosts.includes(post.id)
+        ? "bg-purple-600 text-white"
+        : "bg-indigo-600 text-white hover:bg-indigo-500"
+    }`}
+  >
+    {userLikedPosts.includes(post.id) ? "❤️ Liked" : "🤍 Like"}
+  </button>
+  <span className="text-sm text-gray-300">
+    {likes[post.id] || 0} {likes[post.id] === 1 ? "like" : "likes"}
+  </span>
+</div>
+{/*<button
+        onClick={() => openShare(post)}
+        className="hover:text-purple-400"
+      >
+        📤 Share
+      </button> */}
+      
+              {/* Comments Section */}
+              <div className="mt-3"> 
+                <h3 className="font-semibold mb-2">Comments</h3>
 
                     {getTopLevelComments(post.id).length === 0 ? (
                       <p className="text-gray-300 text-sm">

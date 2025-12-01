@@ -20,25 +20,34 @@ interface User {
 }
 
 // Helper: format lastMessage to hide raw JSON for shared posts
-function formatLastMessage(raw: string | null | undefined): string {
-  if (!raw) return "";
+function formatLastMessage(lastMessage: any): string {
+  if (!lastMessage) return "";
 
-  // Try to detect {"type":"shared_post", ...}
   try {
-    const parsed = JSON.parse(raw);
-    if (parsed && parsed.type === "shared_post" && parsed.post) {
-      const title =
-        typeof parsed.post.title === "string" && parsed.post.title.trim().length
-          ? parsed.post.title.trim()
-          : "a post";
-      return `Shared a post: ${title}`;
-    }
-  } catch {
-    // not JSON – fall through and show raw text
-  }
+    // If backend returns object
+    if (typeof lastMessage === "object" && lastMessage.type) {
+      if (lastMessage.type === "shared_post") {
+        const media = lastMessage.post?.media || "";
+        if (/\.(mp4|mov|webm|ogg)$/i.test(media)) return "📹 Shared a video";
+        return "🖼️ Shared a photo";
+      }
 
-  return raw;
+      return lastMessage.text || "Message";
+    }
+
+    // If backend returns JSON string
+    if (typeof lastMessage === "string" && lastMessage.startsWith("{")) {
+      const parsed = JSON.parse(lastMessage);
+      return formatLastMessage(parsed);
+    }
+
+    // Otherwise treat as plain text
+    return lastMessage;
+  } catch (err) {
+    return typeof lastMessage === "string" ? lastMessage : "";
+  }
 }
+
 
 export default function InboxPage() {
   const router = useRouter();
@@ -159,7 +168,7 @@ export default function InboxPage() {
                 <div className="flex-1 min-w-0 flex justify-between items-center">
                   <span>{conv.otherUser}</span>
                   <span className="text-xs text-gray-400 truncate w-32 text-right ml-2">
-                    {conv.lastMessage?.substring(0, 30) || ""}
+                     {formatLastMessage(conv.lastMessage)}
                   </span>
                 </div>
               </button>

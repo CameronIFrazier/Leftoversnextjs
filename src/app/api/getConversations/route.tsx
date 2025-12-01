@@ -19,21 +19,36 @@ export async function GET(req: Request) {
     });
 
     // Fetch last message for each conversation with user avatar
-    const [rows] = await connection.execute(
-      `
-      SELECT
-        CASE
-          WHEN sender = ? THEN receiver
-          ELSE sender
-        END AS otherUser,
-        message,
-        created_at
-      FROM messages
-      WHERE sender = ? OR receiver = ?
-      ORDER BY created_at DESC
-      `,
-      [currentUser, currentUser, currentUser]
-    );
+  const [rows] = await connection.execute(
+  `
+  SELECT
+    CASE 
+      WHEN m.sender = ? THEN m.receiver
+      ELSE m.sender
+    END AS otherUser,
+    m.message,
+    m.created_at
+  FROM (
+    SELECT 
+      CASE 
+        WHEN sender = ? THEN receiver
+        ELSE sender
+      END AS otherUser,
+      MAX(created_at) AS latest
+    FROM messages
+    WHERE sender = ? OR receiver = ?
+    GROUP BY otherUser
+  ) AS latestMessages
+  JOIN messages m
+    ON ((m.sender = ? AND m.receiver = latestMessages.otherUser)
+        OR (m.sender = latestMessages.otherUser AND m.receiver = ?))
+       AND m.created_at = latestMessages.latest
+  ORDER BY m.created_at DESC
+  `,
+  [currentUser, currentUser, currentUser, currentUser, currentUser, currentUser]
+);
+
+
 
     // Deduplicate by otherUser, keeping only the latest message
     const seen = new Set<string>();
