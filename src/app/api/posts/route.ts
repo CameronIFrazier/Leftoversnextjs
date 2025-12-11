@@ -1,50 +1,70 @@
 import { NextResponse } from "next/server";
-import mysql, { OkPacket } from "mysql2/promise";
+import mysql from "mysql2/promise";
+import { RowDataPacket } from "mysql2";
 
-// ✅ Create connection pool once (reuse for all requests)
-const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  port: Number(process.env.MYSQL_PORT),
-});
+interface Post {
+  id: number;
+  title: string;
+  description: string;
+  username: string;
+  media_url?: string | null;
+  created_at?: string;
+}
 
 export async function POST(req: Request) {
   try {
-    const { title, description, media_url, username } = await req.json();
+    const body = await req.json();
+    const { title, description, userName, mediaUrl } = body;
 
-    if (!title || !username) {
-      return NextResponse.json({ success: false, error: "Missing fields" });
+    if (!title || !userName) {
+      return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ Use OkPacket instead of any
-    const [result] = await pool.execute<OkPacket>(
-      `INSERT INTO posts (username, title, description, media_url)
-       VALUES (?, ?, ?, ?)`,
-      [username, title, description, media_url]
-    );
-    const insertedId = result.insertId;
-
-    // Fetch the newly created post including avatar and created_at
-    const [rows] = await pool.execute(
-      `SELECT p.id, p.title, p.description, p.media_url, p.created_at, p.username,
-              u.profile_pic AS avatar
-       FROM posts p
-       LEFT JOIN users u ON p.username = u.userName
-       WHERE p.id = ?`,
-      [insertedId]
-    );
-
-    const createdPost = Array.isArray(rows) && rows.length ? rows[0] : null;
-
-    return NextResponse.json({
-      success: true,
-      postId: insertedId,
-      post: createdPost,
+    const db = await mysql.createConnection({
+      host: process.env.MYSQL_HOST,
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE,
+      port: Number(process.env.MYSQL_PORT),
     });
-  } catch (err: unknown) {
-    console.error("Error creating post:", err);
-    return NextResponse.json({ success: false, error: (err as Error).message });
+
+    // Insert the post
+    const [result] = await db.execute(
+      `INSERT INTO posts (title, description, username, media_url) VALUES (?, ?, ?, ?)`,
+      [title, description || "", userName, mediaUrl || null]
+    );
+
+    const insertId = (result as any).insertId;
+
+    // Fetch the newly created post
+    const [rows] = await db.query<RowDataPacket[]>(`SELECT * FROM posts WHERE id = ?`, [insertId]);
+
+    const newPost = rows[0] as Post; // cast to your Post type
+
+    await db.end();
+
+    return NextResponse.json({ success: true, post: newPost });
+  } catch (err: any) {
+    console.error("DB Error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const db = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      database: process.env.DB_NAME,
+    });
+
+    const [rows] = await db.query("SELECT * FROM posts ORDER BY created_at DESC");
+    await db.end();
+
+    return NextResponse.json({ success: true, posts: rows });
+  } catch (err: any) {
+    console.error("DB Error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

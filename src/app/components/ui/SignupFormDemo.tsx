@@ -2,7 +2,7 @@
 import React, {use, useState} from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { cn } from "@/app/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   IconBrandGithub,
   IconBrandGoogle,

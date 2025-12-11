@@ -18,39 +18,63 @@ export async function GET(req: Request) {
       port: Number(process.env.MYSQL_PORT),
     });
 
-    // Fetch last message for each conversation
-    const [rows] = await connection.execute(
-      `
-      SELECT
-        CASE
-          WHEN sender = ? THEN receiver
-          ELSE sender
-        END AS otherUser,
-        message,
-        created_at
-      FROM messages
-      WHERE sender = ? OR receiver = ?
-      ORDER BY created_at DESC
-      `,
-      [currentUser, currentUser, currentUser]
-    );
+    // Fetch last message for each conversation with user avatar
+  const [rows] = await connection.execute(
+  `
+  SELECT
+    CASE 
+      WHEN m.sender = ? THEN m.receiver
+      ELSE m.sender
+    END AS otherUser,
+    m.message,
+    m.created_at
+  FROM (
+    SELECT 
+      CASE 
+        WHEN sender = ? THEN receiver
+        ELSE sender
+      END AS otherUser,
+      MAX(created_at) AS latest
+    FROM messages
+    WHERE sender = ? OR receiver = ?
+    GROUP BY otherUser
+  ) AS latestMessages
+  JOIN messages m
+    ON ((m.sender = ? AND m.receiver = latestMessages.otherUser)
+        OR (m.sender = latestMessages.otherUser AND m.receiver = ?))
+       AND m.created_at = latestMessages.latest
+  ORDER BY m.created_at DESC
+  `,
+  [currentUser, currentUser, currentUser, currentUser, currentUser, currentUser]
+);
 
-    await connection.end();
+
 
     // Deduplicate by otherUser, keeping only the latest message
     const seen = new Set<string>();
     const conversations = [];
     for (const row of rows as any[]) {
       if (!seen.has(row.otherUser)) {
+        // Fetch the other user's avatar from users table
+        const [userRows] = await connection.execute(
+          `SELECT profile_pic FROM users WHERE username = ? LIMIT 1`,
+          [row.otherUser]
+        );
+        
+        const otherUserAvatar = (userRows as any[])[0]?.profile_pic || null;
+        
         conversations.push({
           id: row.otherUser, // can also generate a numeric id if you prefer
           otherUser: row.otherUser,
+          otherUserAvatar: otherUserAvatar,
           lastMessage: row.message,
           updatedAt: row.created_at,
         });
         seen.add(row.otherUser);
       }
     }
+
+    await connection.end();
 
     return NextResponse.json({ conversations });
   } catch (err: any) {

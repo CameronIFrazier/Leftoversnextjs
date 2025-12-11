@@ -20,7 +20,7 @@ export async function GET(req: Request) {
         });
 
         const [rows] = await connection.execute(
-            "SELECT id, username, email FROM users WHERE username LIKE ? LIMIT 20",
+            "SELECT id, username, email, profile_pic as avatar FROM users WHERE username LIKE ? LIMIT 20",
             [`%${query}%`]
         );
 
