@@ -7,14 +7,17 @@ import { SponsorsList } from "../components/ui/SponsorsList";
 import { PeopleYouMayKnow } from "../components/ui/PeopleYouMayKnow";
 import { IconEdit, IconPhoto, IconTrash } from "@tabler/icons-react";
 import UploadForm from "../components/ui/UploadForm";
+import Link from "next/link";
+import { jwtDecode } from "jwt-decode";
+
 interface Post {
   id: number;
   title: string;
   description: string;
    media_url?: string | null;
   created_at?: string;
-   username?: string | null; 
-  avatar?: string | null;   
+   username?: string | null;
+  avatar?: string | null;
 }
 //force redeploy
 export default function ProfilePage() {
@@ -35,6 +38,8 @@ const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local 
   const [toastMessage, setToastMessage] = useState<string | null>(null); // 🔹 NEW — toast notification
   const [toastVisible, setToastVisible] = useState(false); // 🔹 NEW — toast visibility for fade animation
   const [isCreatingPost, setIsCreatingPost] = useState(false); // 🔹 NEW — post creation loading state
+    const [followersCount, setFollowersCount] = useState<number>(0);
+    const [followingCount, setFollowingCount] = useState<number>(0);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
@@ -76,67 +81,83 @@ const [mediaPreview, setMediaPreview] = useState<string | null>(null); // Local 
     }, 5000); // Start fading 300ms before the 5 second mark
   };
 
-  useEffect(() => {
-    async function fetchUserData() {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+    useEffect(() => {
+        async function fetchUserData() {
+            const token = localStorage.getItem("token");
+            if (!token) return;
 
-      try {
-        // Fetch username
-        const resUser = await fetch("/api/getUserName", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const dataUser = await resUser.json();
-        if (dataUser.userName) setuserName(dataUser.userName);
+            try {
+                const decoded: any = jwtDecode(token);
+                const email = decoded.email;
+                const headers = { Authorization: `Bearer ${token}` };
 
-        // Fetch profile picture
-        const resPfp = await fetch("/api/getUserPfp", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const dataPfp = await resPfp.json();
-        if (dataPfp.profilePic) setProfilePic(dataPfp.profilePic);
+                const idRes = await fetch(`/api/getUserIdByEmail?email=${email}`, { headers });
+                const idData = await idRes.json();
+                if (!idData.success) return;
+                const id = idData.id;
+                setUserId(id);
 
-        // Fetch bio
-        const resBio = await fetch("/api/getUserBio", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const dataBio = await resBio.json();
-        if (dataBio.bio) setBio(dataBio.bio);
+                // Followers
+                const fRes = await fetch(`/api/getFollowers?userId=${id}`, { headers });
+                if (fRes.ok) {
+                    const data = await fRes.json();
+                    setFollowersCount(data.followers.length);
+                }
 
-        // Fetch highlight
-        const resHighlight = await fetch("/api/getUserHighlight", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const dataHighlight = await resHighlight.json();
-        if (dataHighlight.highlight) setHighlight(dataHighlight.highlight);
+                // Following
+                const gRes = await fetch(`/api/getFollowing?userId=${id}`, { headers });
+                if (gRes.ok) {
+                    const data = await gRes.json();
+                    setFollowingCount(data.following.length);
+                }
 
-        // 🔹 Fetch user posts
-        if (dataUser.userName) {
-          const resPosts = await fetch(
-            `/api/getUserPosts?username=${dataUser.userName}`
-          );
-          const dataPosts = await resPosts.json();
-          setPosts(dataPosts);
+                // Username
+                const resUser = await fetch("/api/getUserName", { headers });
+                const dataUser = await resUser.json();
+                if (dataUser.userName) setuserName(dataUser.userName);
+
+                // Profile picture
+                const resPfp = await fetch("/api/getUserPfp", { headers });
+                const dataPfp = await resPfp.json();
+                if (dataPfp.profilePic) setProfilePic(dataPfp.profilePic);
+
+                // Bio
+                const resBio = await fetch("/api/getUserBio", { headers });
+                const dataBio = await resBio.json();
+                if (dataBio.bio) setBio(dataBio.bio);
+
+                // Highlight
+                const resHighlight = await fetch("/api/getUserHighlight", { headers });
+                const dataHighlight = await resHighlight.json();
+                if (dataHighlight.highlight) setHighlight(dataHighlight.highlight);
+
+                // Posts
+                if (dataUser.userName) {
+                    const resPosts = await fetch(`/api/getUserPosts?username=${dataUser.userName}`);
+                    const dataPosts = await resPosts.json();
+                    setPosts(dataPosts);
+                }
+
+                // Comments
+                try {
+                    const resComments = await fetch("/api/getComments");
+                    if (resComments.ok) {
+                        const dataComments = await resComments.json();
+                        setComments(dataComments);
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch comments:", err);
+                }
+            } catch (err) {
+                console.error("Failed to fetch user data:", err);
+            }
         }
-        // 🔹 Fetch comments for user's posts (all comments; we'll filter client-side)
-        try {
-          const resComments = await fetch('/api/getComments');
-          if (resComments.ok) {
-            const dataComments = await resComments.json();
-            setComments(dataComments);
-          }
-        } catch (err) {
-          console.error('Failed to fetch comments:', err);
-        }
-      } catch (err) {
-        console.error("Failed to fetch user data:", err);
-      }
-    }
 
-    fetchUserData();
-  }, []);
+        fetchUserData();
+    }, []);
 
-  // Save bio to backend
+
+    // Save bio to backend
   const saveBio = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -241,6 +262,19 @@ const handleCreatePost = async () => {
 
 
 
+    const getLoggedInUserEmail = (): string | null => {
+        const token = localStorage.getItem("token");
+        if (!token) return null;
+        try {
+            const decoded: any = jwtDecode(token);
+            return decoded.email || null;
+        } catch (err) {
+            console.error("Failed to decode token:", err);
+            return null;
+        }
+    };
+
+
   return (
     <section className="w-full flex flex-col items-center bg-black text-white min-h-screen">
       {/* Toast Notification */}
@@ -263,7 +297,7 @@ const handleCreatePost = async () => {
           <section className="profile-section w-full min-h-[400px] bg-cover bg-center flex flex-col p-4 items-center text-white rounded-lg bg-black-300">
             {userName ? (
               <h2 className="text-2xl font-bold bg-gradient-to-b from-indigo-500 to-purple-500 mb-4 pl-4 pr-4">
-                Welcome, {userName} 
+                Welcome, {userName}
               </h2>
             ) : (
               <p className="mb-4">Loading username...</p>
@@ -293,8 +327,33 @@ const handleCreatePost = async () => {
             >
               <IconEdit className="h-5 w-5" />
             </button>
-            
-            {/* Profile picture upload - only show in edit mode */}
+
+              <div className="flex items-center gap-4 mb-4">
+                  <button
+                      onClick={() => setIsEditMode(!isEditMode)}
+                      className={`p-2 rounded-full transition-colors ${
+                          isEditMode
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-gray-700 text-gray-300 hover:bg-purple-600 hover:text-white'
+                      }`}
+                      title={isEditMode ? "Exit edit mode" : "Edit profile"}
+                  >
+                      <IconEdit className="h-5 w-5" />
+                  </button>
+
+                  <div className="flex gap-2 text-white text-sm">
+                      <Link href={`/users/${userId}/followers`} className="hover:underline">
+                          <strong>{followersCount}</strong> Followers
+                      </Link>
+                      <Link href={`/users/${userId}/following`} className="hover:underline">
+                          <strong>{followingCount}</strong> Following
+                      </Link>
+                  </div>
+
+              </div>
+
+
+              {/* Profile picture upload - only show in edit mode */}
             {isEditMode && (
               <div className="flex flex-col items-center gap-2 mb-4">
                 {/* Hidden file input */}
@@ -508,7 +567,7 @@ const handleCreatePost = async () => {
           {media_url && (
   media_url.endsWith(".mp4") ? (
     <div className="relative mt-2 w-full">
-      
+
       {/* Spinner Overlay */}
       {videoLoading[id] && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-lg z-10">

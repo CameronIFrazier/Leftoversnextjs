@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+import Link from "next/link";
 
 type UserCore = {
   id: number;
-  userName?: string | null;    
-  username?: string | null;     
+  userName?: string | null;
+  username?: string | null;
   email?: string | null;
   profile_pic_url?: string | null;
 };
@@ -33,8 +35,53 @@ export default function UserProfilePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followersCount, setFollowersCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
 
-  useEffect(() => {
+
+    const getLoggedInUserEmail = (): string | null => {
+        const token = localStorage.getItem("token");
+        if (!token) return null;
+        try {
+            const decoded: any = jwtDecode(token);
+            console.log("Decoded token payload:", decoded);
+            return decoded.email || null;
+        } catch (err) {
+            console.error("Failed to decode token:", err);
+            return null;
+        }
+    };
+
+
+    useEffect(() => {
+        (async () => {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            const headers = { Authorization: `Bearer ${token}` };
+
+            const fRes = await fetch(`/api/getFollowers?userId=${userId}`, { headers });
+            if (fRes.ok) {
+                const data = await fRes.json();
+                setFollowersCount(data.followers.length);
+
+                const loggedInUserEmail = getLoggedInUserEmail();
+                if (loggedInUserEmail) {
+                    setIsFollowing(data.followers.some((f: any) => f.email === loggedInUserEmail));
+                }
+            }
+
+            const gRes = await fetch(`/api/getFollowing?userId=${userId}`, { headers });
+            if (gRes.ok) {
+                const data = await gRes.json();
+                setFollowingCount(data.following.length);
+            }
+        })();
+    }, [userId]);
+
+
+    useEffect(() => {
     let alive = true;
 
     (async () => {
@@ -128,7 +175,61 @@ export default function UserProfilePage() {
           </div>
         </div>
 
-        {/* Bio */}
+          <button
+              onClick={async () => {
+                  const loggedInUserEmail = getLoggedInUserEmail();
+                  if (!loggedInUserEmail) {
+                      console.error("No email found in token");
+                      return;
+                  }
+
+                  const payload = {
+                      followerEmail: loggedInUserEmail,
+                      followingId: Number(userId),
+                  };
+
+
+                  try {
+                      const res = await fetch("/api/follow", {
+                          method: isFollowing ? "DELETE" : "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(payload),
+                      });
+
+                      const data = await res.json();
+                      if (!data.success) {
+                          console.error("Follow API failed:", data.error);
+                          return;
+                      }
+
+                      setIsFollowing(!isFollowing);
+                      setFollowersCount((c) => (isFollowing ? c - 1 : c + 1));
+                  } catch (err) {
+                      console.error("Follow/unfollow request failed:", err);
+                  }
+              }}
+              className="px-4 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white"
+          >
+              {isFollowing ? "Unfollow" : "Follow"}
+          </button>
+
+
+
+          <p className="text-sm text-gray-400">
+              <Link href={`/users/${userId}/followers`} className="hover:underline">
+                  {followersCount} followers
+              </Link>
+          </p>
+
+          <p className="text-sm text-gray-400">
+              <Link href={`/users/${userId}/following`} className="hover:underline">
+                  {followingCount} following
+              </Link>
+          </p>
+
+
+
+          {/* Bio */}
         <div className="border border-gray-800 rounded-2xl p-5 mb-8 bg-[#0b0b0b]">
           <h2 className="text-lg font-semibold mb-2">About</h2>
           <p className="text-gray-300">{bio?.bio?.trim() || "This user hasn’t added a bio yet."}</p>
