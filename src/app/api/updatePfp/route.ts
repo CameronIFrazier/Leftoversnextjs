@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import cloudinary, { initCloudinary } from "@/lib/cloudinary";
 import mysql, { RowDataPacket } from "mysql2/promise";
 import { verify } from "jsonwebtoken";
