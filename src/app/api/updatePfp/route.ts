@@ -11,6 +11,12 @@ type UserRow = RowDataPacket & {
 };
 
 export const POST = async (req: NextRequest) => {
+console.log("CLOUDINARY ENV CHECK:", {
+    cloud: process.env.CLOUDINARY_CLOUD_NAME,
+    key: process.env.CLOUDINARY_API_KEY,
+    secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  
   // Extract token
   const authHeader = req.headers.get("authorization");
   if (!authHeader) {
