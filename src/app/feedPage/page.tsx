@@ -108,7 +108,7 @@ function ShareDialog({
   if (!open || !post) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 ">
       <div className="w-[520px] max-w-[92vw] rounded-2xl border border-white/15 bg-black p-5 shadow-2xl">
         <h3 className="text-lg font-semibold mb-3">Share post</h3>
 
@@ -723,7 +723,7 @@ export default function Home() {
 
 
   return (
-    <div className="h-full w-full bg-black text-white min-h-screen">
+    <div className="h-full w-full bg-black text-white min-h-screen pt-4">
       {/* Sticky Navbar */}
       <div className="sticky top-0 z-50 w-full bg-black/95 border-b border-gray-700 flex px-6 items-center justify-between mb-6">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 inline-block pr-54 pl-4">

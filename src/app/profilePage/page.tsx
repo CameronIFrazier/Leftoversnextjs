@@ -242,7 +242,7 @@ const handleCreatePost = async () => {
 
 
   return (
-    <section className="w-full flex flex-col items-center bg-black text-white min-h-screen">
+    <section className="w-full flex flex-col items-center bg-black text-white min-h-screen pt-6">
       {/* Toast Notification */}
       {toastMessage && (
         <div className={`fixed top-4 right-4 bg-purple-400 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 ease-in-out transform ${

@@ -25,10 +25,24 @@ export async function GET(req: Request) {
     });
 
     // 3) Query the bio by user id
-    const [rows] = await connection.query<RowDataPacket[]>(
-      "SELECT bio FROM users WHERE id = ? LIMIT 1",
-      [userId]
-    );
+   const [rows] = await connection.query<RowDataPacket[]>(
+  "SELECT bio, profile_pic FROM users WHERE id = ? LIMIT 1",
+  [userId]
+);
+
+await connection.end();
+
+if (!rows.length) {
+  return new Response(JSON.stringify({ error: "User not found" }), {
+    status: 404,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+return new Response(JSON.stringify({ bio: rows[0].bio, profile_pic: rows[0].profile_pic }), {
+  status: 200,
+  headers: { "Content-Type": "application/json" },
+});
 
     await connection.end();
 

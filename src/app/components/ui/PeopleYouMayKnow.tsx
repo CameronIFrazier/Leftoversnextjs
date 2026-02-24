@@ -16,12 +16,27 @@ export function PeopleYouMayKnow() {
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
+        const token = localStorage.getItem("token");
+        
+        // Get current user's username
+        let currentUsername = null;
+        if (token) {
+          const resMe = await fetch("/api/getUserName", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const dataMe = await resMe.json();
+          currentUsername = dataMe.userName;
+        }
+
         const resUsers = await fetch('/api/users');
         const usersJson = await resUsers.json();
         const allUsers = usersJson.users || [];
 
+        // Filter out current user
+        const filtered = allUsers.filter((u: any) => u.username !== currentUsername);
+
         // Shuffle
-        const candidates = [...allUsers];
+        const candidates = [...filtered];
         for (let i = candidates.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
