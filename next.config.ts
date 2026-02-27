@@ -2,7 +2,17 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["res.cloudinary.com"],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+    ],
+  },
+  turbopack: {
+    resolveAlias: {
+      'tw-animate-css': './node_modules/tw-animate-css/dist/tw-animate.css',
+    },
   },
 };
 

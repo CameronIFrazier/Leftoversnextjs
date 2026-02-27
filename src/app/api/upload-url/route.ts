@@ -1,22 +1,16 @@
 // src/app/api/upload/route.ts
 import { NextResponse } from "next/server";
-import AWS from "aws-sdk";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 export const runtime = "nodejs";
 
-const s3 = new AWS.S3({
+const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
 });
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
 
 export async function POST(req: Request) {
   try {
@@ -30,15 +24,15 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const key = `posts/${Date.now()}-${file.name}`;
 
-    await s3
-      .putObject({
+    await s3.send(
+      new PutObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME!,
         Key: key,
         Body: buffer,
         ContentType: file.type,
         ACL: "public-read",
       })
-      .promise();
+    );
 
     const media_url = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
 

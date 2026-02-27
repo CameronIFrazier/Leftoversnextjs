@@ -19,7 +19,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col bg-black min-h-screen w-screen items-center justify-start ">
+    <div className="flex flex-col bg-black min-h-screen w-screen items-center justify-start overflow-x-hidden ">
       <NavbarDemo />
 
       {/* Top Section */}
@@ -37,7 +37,7 @@ export default function Home() {
         </div>
 
         {/* Right Column: Video */}
-        <div className="flex-1 flex justify-center items-center overflow-x-hidden">
+        <div className="flex-1 flex justify-center items-center ">
           {isClient && (
             <div className="w-full max-w-4xl aspect-video rounded-lg overflow-hidden">
               <iframe
